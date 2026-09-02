@@ -132,7 +132,10 @@ def decode_data(data: bytes, alphabet: List[int]) -> bytes:
         # Decode each character
         buf = bytearray(8)
         for j, c in enumerate(chunk):
-            # Convert character to table index
+            # Convert character to table index. NSEC3 owner names reach us lowercased by Name, so
+            # the table has to be indexed case-insensitively (base32.rs:88).
+            if 0x61 <= c <= 0x7a:
+                c -= 0x20
             table_idx = c - ord('0')
             if table_idx < 0 or table_idx >= len(alphabet):
                 raise ValueError(f"Invalid base32 character: {chr(c)}")

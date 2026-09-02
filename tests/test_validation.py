@@ -22,56 +22,32 @@ import random
 
 
 def test_rfc4034_sort():
-    """Test nsec_ord based on RFC 4034 section 6.1's example"""
-    # Note: This tests the NSEC ordering logic which is embedded in validation.rs
-    # We'll implement a simplified version for testing
-    def nsec_ord(a: str, b: str) -> int:
-        """
-        NSEC ordering function - DNS names are compared case-insensitively
-        """
-        if a == b:
-            return 0
-        
-        # Convert to lowercase for case-insensitive comparison
-        a_lower = a.lower()
-        b_lower = b.lower()
-        
-        # Split into labels and reverse for comparison
-        a_labels = a_lower.rstrip('.').split('.')[::-1] if a_lower != '.' else ['']
-        b_labels = b_lower.rstrip('.').split('.')[::-1] if b_lower != '.' else ['']
-        
-        # Compare label by label
-        for i in range(max(len(a_labels), len(b_labels))):
-            a_label = a_labels[i] if i < len(a_labels) else ''
-            b_label = b_labels[i] if i < len(b_labels) else ''
-            
-            if a_label < b_label:
-                return -1
-            elif a_label > b_label:
-                return 1
-        
-        # If all labels are equal up to this point, shorter name comes first
-        if len(a_labels) < len(b_labels):
-            return -1
-        elif len(a_labels) > len(b_labels):
-            return 1
-        else:
-            return 0
+    """Test the library's nsec_ord against RFC 4034 section 6.1's example ordering"""
+    from pydnssec_prover.validation import nsec_ord
 
-    # Test cases from RFC 4034 section 6.1
-    test_cases = [
-        ("example.", "a.example."),
-        ("a.example.", "yljkjljk.a.example."),
-        ("yljkjljk.a.example.", "Z.a.example."),
-        ("Z.a.example.", "zABC.a.EXAMPLE."),
-        ("zABC.a.EXAMPLE.", "z.example."),
-        ("z.example.", "*.z.example."),
-        ("*.z.example.", "\\200.z.example.")
+    # The exact sequence from RFC 4034 section 6.1, already in canonical order
+    ordered = [
+        b"example.", b"a.example.", b"yljkjljk.a.example.", b"Z.a.example.",
+        b"zABC.a.EXAMPLE.", b"z.example.", b"\x01.z.example.", b"*.z.example.",
+        b"\xc8.z.example.",
     ]
-    
-    for a, b in test_cases:
-        assert nsec_ord(a, b) < 0, f"Expected {a} < {b}"
-        assert nsec_ord(b, a) > 0, f"Expected {b} > {a}"
+
+    for i in range(len(ordered) - 1):
+        a, b = ordered[i], ordered[i + 1]
+        assert nsec_ord(a, b) < 0, f"Expected {a!r} < {b!r}"
+        assert nsec_ord(b, a) > 0, f"Expected {b!r} > {a!r}"
+
+    for name in ordered:
+        assert nsec_ord(name, name) == 0
+
+    # Case folding is ASCII only and applies per label
+    assert nsec_ord(b"Z.a.example.", b"z.a.example.") == 0
+
+    # Sorting the shuffled list with nsec_ord must reproduce the RFC's order exactly
+    from functools import cmp_to_key
+    shuffled = list(ordered)
+    random.shuffle(shuffled)
+    assert sorted(shuffled, key=cmp_to_key(nsec_ord)) == ordered
 
 
 # Test data helper functions - ported from Rust validation.rs
@@ -362,24 +338,10 @@ def bitcoin_ninja_wildcard_record(pfx: str) -> Tuple[Txt, RRSig, NSec3, RRSig]:
 
 def test_check_txt_record_a():
     """Test verifying a single TXT record signature"""
-    # First build and validate the complete chain to get trusted DNSKEYs
-    rr_stream = BytesIO()
-    for rr in root_dnskey()[1]:
-        write_rr(rr, 1, rr_stream)
-    for rr in com_dnskey()[1]:
-        write_rr(rr, 1, rr_stream)
-    for rr in mattcorallo_dnskey()[1]:
-        write_rr(rr, 1, rr_stream)
-    
-    # Parse and validate to get trusted keys
-    rrs = parse_rr_stream(rr_stream.getvalue())
-    verify_rr_stream(rrs)  # This validates the chain
-    
-    # Now test individual signature verification
     dnskeys = mattcorallo_dnskey()[0]
     txt, txt_rrsig = mattcorallo_txt_record()
     txt_resp = [txt]
-    verify_rrsig(txt_rrsig, dnskeys, txt_resp)
+    assert verify_rrsig(txt_rrsig, dnskeys, txt_resp) is True
 
 
 def test_check_single_txt_proof():
@@ -417,46 +379,18 @@ def test_check_single_txt_proof():
 
 def test_check_txt_record_b():
     """Test verifying another TXT record signature"""
-    # First build and validate the complete chain to get trusted DNSKEYs
-    rr_stream = BytesIO()
-    for rr in root_dnskey()[1]:
-        write_rr(rr, 1, rr_stream)
-    for rr in ninja_dnskey()[1]:
-        write_rr(rr, 1, rr_stream)
-    for rr in bitcoin_ninja_dnskey()[1]:
-        write_rr(rr, 1, rr_stream)
-    
-    # Parse and validate to get trusted keys
-    rrs = parse_rr_stream(rr_stream.getvalue())
-    verify_rr_stream(rrs)  # This validates the chain
-    
-    # Now test individual signature verification
     dnskeys = bitcoin_ninja_dnskey()[0]
     txt, txt_rrsig = bitcoin_ninja_txt_record()
     txt_resp = [txt]
-    verify_rrsig(txt_rrsig, dnskeys, txt_resp)
+    assert verify_rrsig(txt_rrsig, dnskeys, txt_resp) is True
 
 
 def test_check_cname_record():
     """Test verifying a CNAME record signature"""
-    # First build and validate the complete chain to get trusted DNSKEYs
-    rr_stream = BytesIO()
-    for rr in root_dnskey()[1]:
-        write_rr(rr, 1, rr_stream)
-    for rr in ninja_dnskey()[1]:
-        write_rr(rr, 1, rr_stream)
-    for rr in bitcoin_ninja_dnskey()[1]:
-        write_rr(rr, 1, rr_stream)
-    
-    # Parse and validate to get trusted keys
-    rrs = parse_rr_stream(rr_stream.getvalue())
-    verify_rr_stream(rrs)  # This validates the chain
-    
-    # Now test individual signature verification
     dnskeys = bitcoin_ninja_dnskey()[0]
     cname, cname_rrsig = bitcoin_ninja_cname_record()
     cname_resp = [cname]
-    verify_rrsig(cname_rrsig, dnskeys, cname_resp)
+    assert verify_rrsig(cname_rrsig, dnskeys, cname_resp) is True
 
 
 def test_check_multi_zone_proof():
@@ -534,26 +468,13 @@ def test_check_multi_zone_proof():
 
 def test_check_wildcard_record():
     """Test verifying wildcard signatures - works for any name, even multiple names"""
-    # First build and validate the complete chain to get trusted DNSKEYs
-    rr_stream = BytesIO()
-    for rr in root_dnskey()[1]:
-        write_rr(rr, 1, rr_stream)
-    for rr in ninja_dnskey()[1]:
-        write_rr(rr, 1, rr_stream)
-    for rr in bitcoin_ninja_dnskey()[1]:
-        write_rr(rr, 1, rr_stream)
-    
-    # Parse and validate to get trusted keys
-    rrs = parse_rr_stream(rr_stream.getvalue())
-    verify_rr_stream(rrs)  # This validates the chain
-    
     dnskeys = bitcoin_ninja_dnskey()[0]
-    
-    # Test with different prefixes
+
+    # The wildcard proof works for any name, even multiple names
     for prefix in ["name", "another_name", "multiple.names"]:
         txt, txt_rrsig, _, _ = bitcoin_ninja_wildcard_record(prefix)
         txt_resp = [txt]
-        verify_rrsig(txt_rrsig, dnskeys, txt_resp)
+        assert verify_rrsig(txt_rrsig, dnskeys, txt_resp) is True, prefix
 
 
 def test_check_txt_sort_order():
@@ -643,10 +564,11 @@ def test_resolve_time():
     # Test 2106 rollover handling - values before 1997 are treated as post-2106
     cutoff = 60 * 60 * 24 * 365 * 27  # 1997 cutoff
     
-    # Values before 1997 cutoff are treated as post-2106
-    assert resolve_time(0) == 2**32
-    assert resolve_time(1) == 2**32 + 1
-    assert resolve_time(cutoff - 1) == 2**32 + cutoff - 1
+    # Values before 1997 cutoff are treated as post-2106. The offset is u32::MAX, matching the
+    # reference implementation, not 2**32.
+    assert resolve_time(0) == 2**32 - 1
+    assert resolve_time(1) == 2**32 + 0
+    assert resolve_time(cutoff - 1) == 2**32 - 1 + cutoff - 1
     
     # Values after 1997 cutoff are treated as current era
     assert resolve_time(cutoff) == cutoff
@@ -676,36 +598,45 @@ def test_verify_byte_stream():
         }
     ]
     
-    for i, test_case in enumerate(test_cases, 1):
-        print(f"\n--- {test_case['name']} ---")
-        
-        # Skip placeholder test cases
-        if test_case["hex_proof"].startswith("PLACEHOLDER"):
-            print(f"Skipping placeholder test case {i}")
-            continue
-            
-        # Convert hex to bytes
-        proof_bytes = bytes.fromhex(test_case["hex_proof"])
-        
-        # Call verify_byte_stream
-        result_json = verify_byte_stream(proof_bytes, test_case["name_to_resolve"])
-        
-        # Parse and display result
-        result = json.loads(result_json)
-        
-        if "error" in result:
-            print(f"❌ Error: {result['error']}")
-        else:
-            print(f"✅ Success:")
-            print(f"   Valid from: {result['valid_from']}")
-            print(f"   Expires: {result['expires']}")
-            print(f"   Max cache TTL: {result['max_cache_ttl']}")
-            print(f"   Verified records: {len(result['verified_rrs'])}")
-            for rr in result['verified_rrs']:
-                print(rr)
+    # What each proof must yield, measured against dnssec-prover 0.6.10
+    expected = [
+        {
+            "valid_from": 1753761600,
+            "expires": 1754275068,
+            "max_cache_ttl": 3600,
+            "txts": ["bitcoin:bc1qwthe43xeuasklclq4kvhreluv3hu92rzej42js"],
+        },
+        {
+            "valid_from": 1753666332,
+            "expires": 1754271376,
+            "max_cache_ttl": 30,
+            "txts": ["bitcoin:bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l?lno=lno1zr5qyugqgskrk70kqmuq7v3dnr2fnmhukps9n8hut48vkqpqnskt2svsqwjakp7k6pyhtkuxw7y2kqmsxlwruhzqv0zsnhh9q3t9xhx39suc6qsr07ekm5esdyum0w66mnx8vdquwvp7dp5jp7j3v5cp6aj0w329fnkqqv60q96sz5nkrc5r95qffx002q53tqdk8x9m2tmt85jtpmcycvfnrpx3lr45h2g7na3sec7xguctfzzcm8jjqtj5ya27te60j03vpt0vq9tm2n9yxl2hngfnmygesa25s4u4zlxewqpvp94xt7rur4rhxunwkthk9vly3lm5hh0pqv4aymcqejlgssnlpzwlggykkajp7yjs5jvr2agkyypcdlj280cy46jpynsezrcj2kwa2lyr8xvd6lfkph4xrxtk2xc3lpq"],
+        },
+        {
+            "valid_from": 1753675200,
+            "expires": 1754598835,
+            "max_cache_ttl": 30,
+            "txts": ["bitcoin:1JBMattRztKDF2KRS3vhjJXA7h47NEsn2c"],
+        },
+    ]
 
-    
-    print("\n✅ verify_byte_stream test completed")
+    for i, (test_case, want) in enumerate(zip(test_cases, expected), 1):
+        proof_bytes = bytes.fromhex(test_case["hex_proof"])
+
+        result_json = verify_byte_stream(proof_bytes, test_case["name_to_resolve"])
+        result = json.loads(result_json)
+
+        assert "error" not in result, f"{test_case['name']}: {result.get('error')}"
+        assert result["valid_from"] == want["valid_from"], test_case["name"]
+        assert result["expires"] == want["expires"], test_case["name"]
+        assert result["max_cache_ttl"] == want["max_cache_ttl"], test_case["name"]
+
+        txts = [rr["contents"] for rr in result["verified_rrs"] if rr["type"] == "txt"]
+        assert txts == want["txts"], test_case["name"]
+
+        # NSEC and NSEC3 records are proof machinery and must never reach the caller
+        types = {rr["type"] for rr in result["verified_rrs"]}
+        assert "nsec" not in types and "nsec3" not in types, test_case["name"]
 
 
 def test_verify_byte_stream_error_cases():
@@ -724,5 +655,267 @@ def test_verify_byte_stream_error_cases():
     print("✅ Error cases passed")
 
 
+# Regression tests for the chain-of-trust defects fixed on this branch
+
+
+def _bitcoin_ninja_chain_stream() -> BytesIO:
+    """A complete, genuinely valid root -> ninja. -> bitcoin.ninja. chain"""
+    rr_stream = BytesIO()
+    for rr in root_dnskey()[1]:
+        write_rr(rr, 1, rr_stream)
+    for rr in ninja_dnskey()[1]:
+        write_rr(rr, 1, rr_stream)
+    for rr in bitcoin_ninja_dnskey()[1]:
+        write_rr(rr, 1, rr_stream)
+    return rr_stream
+
+
+def test_ends_with_labels_is_label_wise():
+    """A zone suffix must match on a label boundary, not as raw characters"""
+    victim = Name("matt.user._bitcoin-payment.mattcorallo.com.")
+
+    assert victim.ends_with_labels("mattcorallo.com.")
+    assert victim.ends_with_labels("com.")
+    assert victim.ends_with_labels(".")
+    assert victim.ends_with_labels(str(victim))
+
+    # The whole point: "evilmattcorallo.com." is a different zone even though the string ends the
+    # same way
+    assert not Name("matt.user._bitcoin-payment.evilmattcorallo.com.").ends_with_labels(
+        "mattcorallo.com.")
+    assert not victim.ends_with_labels("bitcoin.ninja.")
+    assert not victim.ends_with_labels("orallo.com.")
+
+
+def test_key_from_unrelated_zone_cannot_validate_rrsig():
+    """
+    A DNSKEY belonging to some other zone must never validate an RRSig.
+
+    This is the attack the zone binding exists to stop: an attacker who owns any DNSSEC-signed
+    domain includes their own valid DS and DNSKEY chain in the proof and then tries to have it
+    cover somebody else's _bitcoin-payment name.
+    """
+    txt, txt_rrsig = mattcorallo_txt_record()
+
+    # Control: the zone's own keys do validate this signature
+    assert verify_rrsig(txt_rrsig, mattcorallo_dnskey()[0], [txt]) is True
+
+    # An unrelated zone's keys must not
+    for foreign_keys in (bitcoin_ninja_dnskey()[0], ninja_dnskey()[0], com_dnskey()[0],
+                         root_dnskey()[0]):
+        with pytest.raises(ValidationError) as excinfo:
+            verify_rrsig(txt_rrsig, foreign_keys, [txt])
+        assert excinfo.value.error_type == ValidationError.ErrorType.INVALID
+
+    # And the mixed bag of every key in the proof must not either: only the key tag, protocol,
+    # ZONE flag and algorithm used to be checked, so any of these could stand in for the real one.
+    all_keys = (root_dnskey()[0] + com_dnskey()[0] + ninja_dnskey()[0] +
+                bitcoin_ninja_dnskey()[0])
+    with pytest.raises(ValidationError) as excinfo:
+        verify_rrsig(txt_rrsig, all_keys, [txt])
+    assert excinfo.value.error_type == ValidationError.ErrorType.INVALID
+
+
+def test_rrsig_may_not_sign_a_name_outside_its_zone():
+    """
+    verify_rr_stream must refuse a proof in which a zone's RRSig covers a name in another zone.
+
+    The stream carries a complete, valid bitcoin.ninja. chain, then claims a bitcoin.ninja. key
+    signed a record under mattcorallo.com. The whole proof has to be rejected, not merely have
+    that one record dropped from an otherwise successful result.
+    """
+    rr_stream = _bitcoin_ninja_chain_stream()
+
+    txt, txt_rrsig = bitcoin_ninja_txt_record()
+    foreign_name = Name("txt_test.dnssec_proof_tests.mattcorallo.com.")
+    foreign_txt = Txt(foreign_name, txt.data)
+    foreign_rrsig = RRSig(
+        foreign_name, Txt.TYPE, txt_rrsig.algorithm, txt_rrsig.labels,
+        txt_rrsig.original_ttl, txt_rrsig.expiration, txt_rrsig.inception,
+        txt_rrsig.key_tag, Name("bitcoin.ninja."), txt_rrsig.signature
+    )
+    write_rr(foreign_txt, 1, rr_stream)
+    write_rr(foreign_rrsig, 1, rr_stream)
+
+    rrs = parse_rr_stream(rr_stream.getvalue())
+    random.shuffle(rrs)
+
+    with pytest.raises(ValidationError) as excinfo:
+        verify_rr_stream(rrs)
+    assert excinfo.value.error_type == ValidationError.ErrorType.INVALID
+    assert "outside its signer's zone" in str(excinfo.value)
+
+
+def test_corrupt_payload_is_an_error_not_an_empty_success():
+    """One flipped byte in a signed TXT payload must fail the proof, not silently drop the record"""
+    def build(txt_record):
+        rr_stream = BytesIO()
+        for rr in root_dnskey()[1]:
+            write_rr(rr, 1, rr_stream)
+        for rr in com_dnskey()[1]:
+            write_rr(rr, 1, rr_stream)
+        for rr in mattcorallo_dnskey()[1]:
+            write_rr(rr, 1, rr_stream)
+        write_rr(txt_record, 1, rr_stream)
+        write_rr(txt_rrsig, 1, rr_stream)
+        return parse_rr_stream(rr_stream.getvalue())
+
+    txt, txt_rrsig = mattcorallo_txt_record()
+
+    # Control: untouched, this proof validates
+    verified = verify_rr_stream(build(txt))
+    assert len(verified.verified_rrs) == 1
+
+    corrupt_data = bytearray(txt.data)
+    corrupt_data[-1] ^= 0x01
+    corrupt_txt = Txt(txt.name, bytes(corrupt_data))
+
+    with pytest.raises(ValidationError) as excinfo:
+        verify_rr_stream(build(corrupt_txt))
+    assert excinfo.value.error_type == ValidationError.ErrorType.INVALID
+
+
+def test_compression_pointer_loop_terminates():
+    """The two bytes c0 00 are a name pointing at itself and must error, not hang"""
+    from pydnssec_prover import ser
+
+    with pytest.raises(SerializationError):
+        ser.read_wire_packet_name(b"\xc0\x00", 0)
+
+    with pytest.raises(SerializationError):
+        ser.read_wire_packet_name(b"\xc0\x00", 0, b"\xc0\x00")
+
+    # An RFC 9102 chain has no enclosing packet, so a pointer is never legitimate there
+    with pytest.raises(SerializationError):
+        parse_rr_stream(b"\xc0\x00\x00\x10\x00\x01\x00\x00\x00\x1e\x00\x00")
+
+    # A pointer chain that ends in a real name still terminates
+    with pytest.raises(SerializationError):
+        ser.read_wire_packet_name(b"\xc0\x02\xc0\x00", 0)
+
+
+def test_cname_loop_terminates():
+    """Two CNAMEs pointing at each other must not spin resolve_name forever"""
+    a = CName(Name("a.example.com."), Name("b.example.com."))
+    b = CName(Name("b.example.com."), Name("a.example.com."))
+
+    stream = VerifiedRRStream([a, b], 0, 0, 0)
+    assert stream.resolve_name(Name("a.example.com.")) == []
+
+
+def test_labels_below_signature_label_count_is_invalid():
+    """A record with fewer labels than its RRSig claims must hard fail, not be hashed anyway"""
+    txt, txt_rrsig = bitcoin_ninja_txt_record()
+    over_labelled = RRSig(
+        txt_rrsig.name, Txt.TYPE, txt_rrsig.algorithm, txt.name.labels() + 1,
+        txt_rrsig.original_ttl, txt_rrsig.expiration, txt_rrsig.inception,
+        txt_rrsig.key_tag, txt_rrsig.signer_name, txt_rrsig.signature
+    )
+
+    with pytest.raises(ValidationError) as excinfo:
+        verify_rrsig(over_labelled, bitcoin_ninja_dnskey()[0], [txt])
+    assert excinfo.value.error_type == ValidationError.ErrorType.INVALID
+
+
+def test_revoked_key_is_not_used():
+    """A DNSKEY with the REVOKE bit set must not validate anything"""
+    txt, txt_rrsig = mattcorallo_txt_record()
+    revoked = [DnsKey(k.name, k.flags | 0b010000000, k.protocol, k.algorithm, k.public_key)
+               for k in mattcorallo_dnskey()[0]]
+
+    with pytest.raises(ValidationError) as excinfo:
+        verify_rrsig(txt_rrsig, revoked, [txt])
+    assert excinfo.value.error_type == ValidationError.ErrorType.INVALID
+
+
+def _ds_for_key(key: DnsKey, digest_type: int, digest: bytes = None) -> DS:
+    """Build a DS record over the given DNSKEY, computing the real digest unless one is given"""
+    from pydnssec_prover.crypto import Hasher
+    from pydnssec_prover.ser import write_name
+
+    if digest is None:
+        hasher = {1: Hasher.sha1, 2: Hasher.sha256, 4: Hasher.sha384}[digest_type]()
+        name_buf = BytesIO()
+        write_name(name_buf, str(key.name))
+        hasher.update(name_buf.getvalue())
+        key_buf = BytesIO()
+        key.write_data(key_buf)
+        hasher.update(key_buf.getvalue())
+        digest = hasher.finish().as_ref()
+
+    return DS(key.name, key.key_tag(), key.algorithm, digest_type, digest)
+
+
+def test_ds_digest_type_handling():
+    """No DS at all, an unreadable DS, SHA-384, and the SHA-1 downgrade guard"""
+    from pydnssec_prover.validation import verify_dnskeys
+
+    keys, rrs = root_dnskey()
+    sigs = [rr for rr in rrs if isinstance(rr, RRSig)]
+    ksk = next(k for k in keys if k.flags & 0b1)  # the 257 key, which the root DS covers
+
+    # No DS at all is an unsigned delegation, which is a hard failure
+    with pytest.raises(ValidationError) as excinfo:
+        verify_dnskeys(sigs, [], keys)
+    assert excinfo.value.error_type == ValidationError.ErrorType.INVALID
+
+    # A DS we cannot read is only an algorithm gap. Digest type 3 is GOST, which we do not do.
+    gost_ds = DS(ksk.name, ksk.key_tag(), ksk.algorithm, 3, b"\x00" * 32)
+    with pytest.raises(ValidationError) as excinfo:
+        verify_dnskeys(sigs, [gost_ds], keys)
+    assert excinfo.value.error_type == ValidationError.ErrorType.UNSUPPORTED_ALGORITHM
+
+    # SHA-384 (digest type 4) is supported
+    assert verify_dnskeys(sigs, [_ds_for_key(ksk, 4)], keys) is not None
+
+    # A SHA-1 DS alone is accepted
+    assert verify_dnskeys(sigs, [_ds_for_key(ksk, 1)], keys) is not None
+
+    # But a SHA-1 DS must be ignored once the zone also published a SHA-256 one, so a forged SHA-1
+    # collision cannot downgrade a zone. The SHA-256 DS here is bogus, so nothing validates.
+    bogus_sha256 = _ds_for_key(ksk, 2, b"\x00" * 32)
+    with pytest.raises(ValidationError) as excinfo:
+        verify_dnskeys(sigs, [_ds_for_key(ksk, 1), bogus_sha256], keys)
+    assert excinfo.value.error_type == ValidationError.ErrorType.INVALID
+
+
+def test_proof_step_limit_counts_rrsig_sets():
+    """The step limit counts RRSig sets validated, not passes over the record list"""
+    import pydnssec_prover.validation as validation
+
+    rr_stream = BytesIO()
+    for rr in root_dnskey()[1]:
+        write_rr(rr, 1, rr_stream)
+    for rr in com_dnskey()[1]:
+        write_rr(rr, 1, rr_stream)
+    for rr in mattcorallo_dnskey()[1]:
+        write_rr(rr, 1, rr_stream)
+    txt, txt_rrsig = mattcorallo_txt_record()
+    write_rr(txt, 1, rr_stream)
+    write_rr(txt_rrsig, 1, rr_stream)
+    rrs = parse_rr_stream(rr_stream.getvalue())
+
+    original = validation.MAX_PROOF_STEPS
+    try:
+        validation.MAX_PROOF_STEPS = 2
+        with pytest.raises(ValidationError) as excinfo:
+            validation.verify_rr_stream(rrs)
+        assert excinfo.value.error_type == ValidationError.ErrorType.VALIDATION_COUNT_LIMITED
+    finally:
+        validation.MAX_PROOF_STEPS = original
+
+    # With the real limit the same proof is fine
+    assert len(verify_rr_stream(rrs).verified_rrs) == 1
+
+
+def test_empty_result_set_is_an_error():
+    """A proof carrying only DNSSEC infrastructure proves nothing and must be refused"""
+    rrs = parse_rr_stream(_bitcoin_ninja_chain_stream().getvalue())
+
+    with pytest.raises(ValidationError) as excinfo:
+        verify_rr_stream(rrs)
+    assert excinfo.value.error_type == ValidationError.ErrorType.INVALID
+
+
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"]) 
+    pytest.main([__file__, "-v"])

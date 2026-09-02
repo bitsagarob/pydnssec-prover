@@ -20,6 +20,47 @@ except ImportError:
     from ser import SerializationError
 
 
+def name_ends_with_labels(name: bytes, suffix: str) -> bool:
+    """
+    Check that `suffix` is a suffix of `name` on a label boundary (rr.rs:18).
+
+    A plain string `endswith` is not enough: "evilmattcorallo.com." ends with "mattcorallo.com."
+    as characters but is a different zone.
+    """
+    suffix_bytes = suffix.encode('utf-8')
+    if len(name) < len(suffix_bytes):
+        return False
+    if name.endswith(b".") and suffix_bytes == b".":
+        return True
+    if name[len(name) - len(suffix_bytes):].lower() != suffix_bytes.lower():
+        return False
+    if len(name) == len(suffix_bytes):
+        return True
+    return name[len(name) - len(suffix_bytes) - 1:len(name) - len(suffix_bytes)] == b'.'
+
+
+def _name_cmp(a: str, b: str) -> int:
+    """
+    Order two names by their wire encoding (rr.rs Ord for Name).
+
+    Each label is compared by length first, then by bytes, which is what makes an RRset of records
+    holding names sort into RFC 4034 canonical order.
+    """
+    a_labels = a.split('.')
+    b_labels = b.split('.')
+    for i in range(max(len(a_labels), len(b_labels))):
+        if i >= len(b_labels):
+            return 1
+        if i >= len(a_labels):
+            return -1
+        al, bl = a_labels[i], b_labels[i]
+        if len(al) != len(bl):
+            return -1 if len(al) < len(bl) else 1
+        if al != bl:
+            return -1 if al < bl else 1
+    return 0
+
+
 class Name:
     """
     A valid domain name.
@@ -99,10 +140,14 @@ class Name:
     
     def __hash__(self) -> int:
         return hash(self._name)
-    
+
+    def ends_with_labels(self, suffix: str) -> bool:
+        """Check if `suffix` is a suffix of this name, on a label boundary"""
+        return name_ends_with_labels(self._name.encode('utf-8'), suffix)
+
     def __lt__(self, other) -> bool:
         if isinstance(other, Name):
-            return self._name < other._name
+            return _name_cmp(self._name, other._name) < 0
         return NotImplemented
 
 
@@ -401,29 +446,33 @@ class Txt(Record):
     
     @classmethod
     def from_wire_data(cls, name: Name, data: bytes, wire_packet: Optional[bytes] = None) -> 'Txt':
-        # Parse TXT data according to DNS wire format (length-prefixed strings)
+        # Parse TXT data according to DNS wire format (length-prefixed strings). The chunk
+        # boundaries are kept exactly as they arrived: re-chunking at 255 would change the bytes
+        # that were signed for any record split at some other length.
         chunks = []
         offset = 0
-        
+        serialized_len = 0
+
         while offset < len(data):
-            if offset >= len(data):
-                raise SerializationError("Incomplete TXT record")
-            
             length = data[offset]
             offset += 1
-            
+
             if length == 0:
                 raise SerializationError("Empty TXT chunk not allowed")
-            
+
             if offset + length > len(data):
                 raise SerializationError("TXT chunk extends beyond record")
-            
+
+            serialized_len += 1 + length
+            if serialized_len > 0xffff:
+                raise SerializationError("TXT record too long")
+
             chunks.append(data[offset:offset + length])
             offset += length
-        
-        # Reconstruct the original data
-        full_data = b''.join(chunks)
-        return cls(name, full_data)
+
+        res = cls(name, b'')
+        res.data_chunks = chunks
+        return res
     
     def write_data(self, out: BytesIO):
         for chunk in self.data_chunks:
@@ -849,48 +898,53 @@ class NSec(Record):
     
     TYPE = 47
     
-    def __init__(self, name: Name, next_name: Name, types: NSecTypeMask):
+    def __init__(self, name: Name, next_name: Union[bytes, Name, str], types: NSecTypeMask):
         self._name = name
+        # Held as raw bytes: an online signer's next_name commonly carries a NUL label and its case
+        # is significant, so it cannot go through Name normalisation.
+        if isinstance(next_name, Name):
+            next_name = str(next_name)
+        if isinstance(next_name, str):
+            next_name = next_name.encode('utf-8')
         self.next_name = next_name
         self.types = types
-    
+
     @property
     def name(self) -> Name:
         return self._name
-    
+
     @property
     def type_code(self) -> int:
         return self.TYPE
-    
+
     def to_json(self) -> str:
         # Simple representation for types
         types_list = []
         for i in range(8192 * 8):
             if self.types.contains_type(i):
                 types_list.append(i)
-        
+
         return json.dumps({
             "type": "nsec",
             "name": str(self._name),
-            "next_name": str(self.next_name),
+            "next_name": self.next_name.decode('utf-8', 'backslashreplace'),
             "types": types_list
         })
-    
+
     @classmethod
     def from_wire_data(cls, name: Name, data: bytes, wire_packet: Optional[bytes] = None) -> 'NSec':
-        next_name_str, offset = ser.read_wire_packet_name(data, 0, wire_packet)
-        next_name = Name(next_name_str)
-        
+        next_name, offset = ser.read_wire_packet_name_bytes(data, 0, wire_packet)
+
         # Read NSEC types bitmap
         types_data, _ = ser.read_nsec_types_bitmap(data, offset, len(data) - offset)
         types = NSecTypeMask(types_data)
-        
+
         return cls(name, next_name, types)
-    
+
     def write_data(self, out: BytesIO):
-        # Write next name
-        ser.write_name(out, str(self.next_name))
-        
+        # RFC 6840 section 5.1 mandates this not be lowercased
+        ser.write_name_without_case_modification(out, self.next_name)
+
         # Write types bitmap
         ser.write_nsec_types_bitmap(out, self.types.as_bytes())
     
@@ -902,8 +956,10 @@ class NSec(Record):
     
     def __lt__(self, other) -> bool:
         if isinstance(other, NSec):
-            return ((self._name, self.next_name, self.types.as_bytes()) < 
-                    (other._name, other.next_name, other.types.as_bytes()))
+            if self._name != other._name:
+                return self._name < other._name
+            return ((self.next_name, self.types.as_bytes()) <
+                    (other.next_name, other.types.as_bytes()))
         return NotImplemented
 
 
@@ -1039,8 +1095,10 @@ def parse_rr_stream(data: bytes) -> List[Record]:
     offset = 0
     
     while offset < len(data):
-        # Parse record header
-        name_str, offset = ser.read_wire_packet_name(data, offset)
+        # Parse record header. An RFC 9102 chain is a bare series of records with no enclosing
+        # packet, so compression pointers have nothing legitimate to point at: pass an empty wire
+        # packet and they error out (ser.rs:157).
+        name_str, offset = ser.read_wire_packet_name(data, offset, b"")
         name = Name(name_str)
         
         if offset + 10 > len(data):
@@ -1064,13 +1122,13 @@ def parse_rr_stream(data: bytes) -> List[Record]:
         record_data = data[offset:offset + rdlength]
         offset += rdlength
         
-        # Parse record based on type
-        if rr_type in RECORD_TYPES:
-            record = RECORD_TYPES[rr_type].from_wire_data(name, record_data, data)
-            records.append(record)
-        else:
-            # Skip unknown record types
-            continue
+        # Parse record based on type. An unsupported type fails the whole stream rather than being
+        # skipped, so this port and the reference implementation never disagree about which proofs
+        # parse at all (ser.rs:151).
+        if rr_type not in RECORD_TYPES:
+            raise SerializationError(f"Unsupported record type {rr_type}")
+
+        records.append(RECORD_TYPES[rr_type].from_wire_data(name, record_data, b""))
     
     return records
 
