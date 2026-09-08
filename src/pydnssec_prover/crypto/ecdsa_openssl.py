@@ -23,6 +23,7 @@ worse, to something that answers differently, is the failure mode this whole fil
 
 import ctypes
 import ctypes.util
+import sys
 
 
 class BackendUnavailable(Exception):
@@ -37,11 +38,27 @@ _SPKI_PREFIX = {
 }
 
 
+# macOS ships an unversioned /usr/lib/libcrypto.dylib that is not meant to be linked against:
+# dlopen'ing it makes dyld abort() the whole process rather than fail, so the `except OSError`
+# below never gets a turn and the caller cannot survive it. ctypes.util.find_library("crypto")
+# answers with exactly that file, which is why it is not consulted there. Only versioned dylibs
+# are tried, by the names and locations a real OpenSSL install uses.
+_DARWIN_NAMES = [
+    "libcrypto.3.dylib",
+    "libcrypto.1.1.dylib",
+    "/opt/homebrew/opt/openssl@3/lib/libcrypto.3.dylib",
+    "/usr/local/opt/openssl@3/lib/libcrypto.3.dylib",
+]
+
+
 def _load_libcrypto():
-    names = ["libcrypto.so.3", "libcrypto.so.1.1", "libcrypto.so"]
-    found = ctypes.util.find_library("crypto")
-    if found:
-        names.insert(0, found)
+    if sys.platform == "darwin":
+        names = list(_DARWIN_NAMES)
+    else:
+        names = ["libcrypto.so.3", "libcrypto.so.1.1", "libcrypto.so"]
+        found = ctypes.util.find_library("crypto")
+        if found:
+            names.insert(0, found)
     for name in names:
         try:
             return ctypes.CDLL(name)
