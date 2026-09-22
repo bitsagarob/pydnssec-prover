@@ -931,6 +931,19 @@ def test_proof_step_limit_counts_rrsig_sets():
     assert len(verify_rr_stream(rrs).verified_rrs) == 1
 
 
+def test_name_accepts_only_the_reference_character_set():
+    """A name must parse here exactly when it parses in the Rust version"""
+    for ok in ("ninja.", "_bitcoin-payment.example.", "*.wildcard.example.",
+               "s5sn15c8lcpo7v7f1p0ms6vlbdejt0kd.bitcoin.ninja.", "UPPER.example."):
+        assert Name(ok).name == ok.lower()
+
+    # Anything else is refused. A flipped byte inside an RRSig signer name used to parse here and
+    # fail in the Rust version, which is a disagreement about whether a proof is readable at all.
+    for bad in ("ninj!.", "a b.example.", "a\x00.example.", 'a".example.', "ex\xe4mple."):
+        with pytest.raises(ValueError):
+            Name(bad)
+
+
 def test_rechunked_txt_is_a_different_record():
     """A TXT re-split at different chunk boundaries must not compare equal to the signed one"""
     dnskey, signed, rechunked, rrsig = split_txt_record()

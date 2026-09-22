@@ -84,9 +84,11 @@ class Name:
         if len(name.encode('utf-8')) > 255:
             raise ValueError("Name too long (max 255 bytes)")
         
-        # Check for printable ASCII characters (excluding quote)
+        # Only the characters the Rust version accepts, so the two agree on which names parse
         for char in name:
-            if not (char.isprintable() and ord(char) < 128) or char == '"':
+            if char in '-._*':
+                continue
+            if not ('0' <= char <= '9' or 'a' <= char <= 'z' or 'A' <= char <= 'Z'):
                 raise ValueError("Name contains invalid characters")
         
         # Check label lengths
