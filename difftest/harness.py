@@ -28,8 +28,8 @@ REPO = os.path.dirname(HERE)
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
-# The corpus is an artifact of the dnssec-verify repo, with its own regeneration scripts, and is
-# not vendored here. Point DIFFTEST_CORPUS at it, or vendor a copy into difftest/corpus.
+# A pinned copy of the corpus lives in difftest/corpus and is used by default. DIFFTEST_CORPUS
+# overrides it with a larger or freshly captured one.
 DEFAULT_CORPUS_CANDIDATES = [
     os.environ.get("DIFFTEST_CORPUS", ""),
     os.path.join(HERE, "corpus"),

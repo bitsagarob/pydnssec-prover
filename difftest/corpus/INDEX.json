@@ -1,0 +1,2179 @@
+{
+ "corpus": "differential test corpus for a pure-Python port of dnssec-prover",
+ "oracle": "dnssec-verify (this repo) wrapping dnssec-prover 0.6.10",
+ "note": "Pinned copy of the differential corpus. Proof blobs only; every replayable case records the sha256 its blob must have. Live proofs are snapshots whose signature windows have expired, which is expected: see difftest/README.md on clock pinning.",
+ "case_count": 42,
+ "cases": [
+  {
+   "case": "live/a.nsec_tests.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "a.nsec_tests.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/a.nsec_tests.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385404,
+   "proof_bin": "live/a.nsec_tests.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 3990,
+   "signature_window_days": 11.25,
+   "valid_from": 1788377213,
+   "expires": 1789348782,
+   "expected_records": [
+    "txt_a"
+   ],
+   "structure": {
+    "rr_count": 24,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 1,
+     "RRSIG": 8,
+     "DNSKEY": 11,
+     "DS": 4
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "nsec_tests.dnssec_proof_tests.bitcoin.ninja.",
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 24,
+    "chain_valid": true,
+    "valid_from": 1788377213,
+    "expires": 1789348782,
+    "max_cache_ttl": 30,
+    "records": [
+     "txt_a"
+    ]
+   },
+   "proof_sha256": "b122f531026bd9058a169f3569926fde25608f79727611f0d45bae9ad2fa8750"
+  },
+  {
+   "case": "live/a.x_domain_cname_wild.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "a.x_domain_cname_wild.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/a.x_domain_cname_wild.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385402,
+   "proof_bin": "live/a.x_domain_cname_wild.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 5514,
+   "signature_window_days": 5.43,
+   "valid_from": 1788364800,
+   "expires": 1788834371,
+   "expected_records": [
+    "as long as it doesn't start with bitcoin:, other records should be ignored",
+    "bitcoin:bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l?lno=lno1zr5qyugqgskrk70kqmuq7v3dnr2fnmhukps9n8hut48vkqpqnskt2svsqwjakp7k6pyhtkuxw7y2kqmsxlwruhzqv0zsnhh9q3t9xhx39suc6qsr07ekm5esdyum0w66mnx8vdquwvp7dp5jp7j3v5cp6aj0w329fnkqqv60q96sz5nkrc5r95qffx002q53tqdk8x9m2tmt85jtpmcycvfnrpx3lr45h2g7na3sec7xguctfzzcm8jjqtj5ya27te60j03vpt0vq9tm2n9yxl2hngfnmygesa25s4u4zlxewqpvp94xt7rur4rhxunwkthk9vly3lm5hh0pqv4aymcqejlgssnlpzwlggykkajp7yjs5jvr2agkyypcdlj280cy46jpynsezrcj2kwa2lyr8xvd6lfkph4xrxtk2xc3lpq"
+   ],
+   "structure": {
+    "rr_count": 34,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "CNAME": 1,
+     "RRSIG": 12,
+     "TXT": 2,
+     "NSEC3": 1,
+     "DNSKEY": 12,
+     "DS": 6
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "mattcorallo.com.",
+     "ninja.",
+     "com.",
+     "."
+    ],
+    "nsec3_params": [
+     {
+      "hash_alg": 1,
+      "flags": 0,
+      "iterations": 0,
+      "salt": "53a1ec3e1082a235"
+     }
+    ],
+    "has_nsec": false,
+    "has_nsec3": true,
+    "has_cname": true,
+    "has_dname": false,
+    "has_wildcard_rrsig": true
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 34,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1788834371,
+    "max_cache_ttl": 30,
+    "records": [
+     "as long as it doesn't start with bitcoin:, other records should be ignored",
+     "bitcoin:bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l?lno=lno1zr5qyugqgskrk70kqmuq7v3dnr2fnmhukps9n8hut48vkqpqnskt2svsqwjakp7k6pyhtkuxw7y2kqmsxlwruhzqv0zsnhh9q3t9xhx39suc6qsr07ekm5esdyum0w66mnx8vdquwvp7dp5jp7j3v5cp6aj0w329fnkqqv60q96sz5nkrc5r95qffx002q53tqdk8x9m2tmt85jtpmcycvfnrpx3lr45h2g7na3sec7xguctfzzcm8jjqtj5ya27te60j03vpt0vq9tm2n9yxl2hngfnmygesa25s4u4zlxewqpvp94xt7rur4rhxunwkthk9vly3lm5hh0pqv4aymcqejlgssnlpzwlggykkajp7yjs5jvr2agkyypcdlj280cy46jpynsezrcj2kwa2lyr8xvd6lfkph4xrxtk2xc3lpq"
+    ]
+   },
+   "proof_sha256": "d1090af1845cd1cb247af1de205f63a099ccecd4ccdf92f74826d0d1a0ac4f58"
+  },
+  {
+   "case": "live/asdf.cname_wildcard_test.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "asdf.cname_wildcard_test.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/asdf.cname_wildcard_test.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385403,
+   "proof_bin": "live/asdf.cname_wildcard_test.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 3987,
+   "signature_window_days": 11.39,
+   "valid_from": 1788364800,
+   "expires": 1789348782,
+   "expected_records": [
+    "wildcard_test"
+   ],
+   "structure": {
+    "rr_count": 24,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "CNAME": 1,
+     "RRSIG": 9,
+     "TXT": 1,
+     "NSEC3": 2,
+     "DNSKEY": 8,
+     "DS": 3
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [
+     {
+      "hash_alg": 1,
+      "flags": 0,
+      "iterations": 0,
+      "salt": "53a1ec3e1082a235"
+     }
+    ],
+    "has_nsec": false,
+    "has_nsec3": true,
+    "has_cname": true,
+    "has_dname": false,
+    "has_wildcard_rrsig": true
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 24,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1789348782,
+    "max_cache_ttl": 30,
+    "records": [
+     "wildcard_test"
+    ]
+   },
+   "proof_sha256": "297cd883f2caefae9058c701d6074b760507b1c1595b0cd5084cc4c818f3946f"
+  },
+  {
+   "case": "live/asdf.nsec_tests.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "asdf.nsec_tests.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/asdf.nsec_tests.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "invalid",
+   "capture_time_unix": 1788385945,
+   "proof_bin": null,
+   "invalid_at_layer": "dnssec",
+   "oracle_error": "could not build proof via 1.1.1.1:53: The server indicated the requested hostname does not exist",
+   "reason": "Name does not exist under an NSEC zone rather than an NSEC3 one. The nsec_tests subzone signs denial with plain NSEC, so this is the NSEC counterpart to the bitcoin.ninja NSEC3 NXDOMAIN case and to Cloudflare's black lie. Three different shapes of the same 'no such name' answer."
+  },
+  {
+   "case": "live/asdf.wildcard_test.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "asdf.wildcard_test.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/asdf.wildcard_test.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385403,
+   "proof_bin": "live/asdf.wildcard_test.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 3441,
+   "signature_window_days": 11.39,
+   "valid_from": 1788364800,
+   "expires": 1789348782,
+   "expected_records": [
+    "wildcard_test"
+   ],
+   "structure": {
+    "rr_count": 20,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 1,
+     "RRSIG": 7,
+     "NSEC3": 1,
+     "DS": 3,
+     "DNSKEY": 8
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [
+     {
+      "hash_alg": 1,
+      "flags": 0,
+      "iterations": 0,
+      "salt": "53a1ec3e1082a235"
+     }
+    ],
+    "has_nsec": false,
+    "has_nsec3": true,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": true
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 20,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1789348782,
+    "max_cache_ttl": 30,
+    "records": [
+     "wildcard_test"
+    ]
+   },
+   "proof_sha256": "cd80c0ea15b6983be47f89cee9f3792b6a95400b4c7243449069e4efdfcf2149"
+  },
+  {
+   "case": "live/asdf.wildcard_test.nsec_tests.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "asdf.wildcard_test.nsec_tests.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/asdf.wildcard_test.nsec_tests.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385943,
+   "proof_bin": "live/asdf.wildcard_test.nsec_tests.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 4377,
+   "signature_window_days": 7.63,
+   "valid_from": 1788377213,
+   "expires": 1789036403,
+   "expected_records": [
+    "wildcard_test"
+   ],
+   "structure": {
+    "rr_count": 26,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 1,
+     "RRSIG": 9,
+     "NSEC": 1,
+     "DS": 4,
+     "DNSKEY": 11
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "nsec_tests.dnssec_proof_tests.bitcoin.ninja.",
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": true,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": true
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 26,
+    "chain_valid": true,
+    "valid_from": 1788377213,
+    "expires": 1789036403,
+    "max_cache_ttl": 30,
+    "records": [
+     "wildcard_test"
+    ]
+   },
+   "proof_sha256": "96f5285108a66d750f61e6f1d01e7d2ff863d7dadca38fd5381255839a652e35"
+  },
+  {
+   "case": "live/bitcoin.ninja",
+   "query_name": "bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385400,
+   "proof_bin": "live/bitcoin.ninja.bin",
+   "proof_bytes": 3147,
+   "signature_window_days": 11.39,
+   "valid_from": 1788364800,
+   "expires": 1789348782,
+   "expected_records": [
+    "v=spf1 ip4:69.59.18.99 ip6:2620:6e:a000:1::99 ~all"
+   ],
+   "structure": {
+    "rr_count": 18,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 1,
+     "RRSIG": 6,
+     "DNSKEY": 8,
+     "DS": 3
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 18,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1789348782,
+    "max_cache_ttl": 3600,
+    "records": [
+     "v=spf1 ip4:69.59.18.99 ip6:2620:6e:a000:1::99 ~all"
+    ]
+   },
+   "proof_sha256": "f0a03697eeee2c4f9b61a3c80552a43eea3ec83bc0e991938a595ff26d310128"
+  },
+  {
+   "case": "live/cloudflare.com",
+   "query_name": "cloudflare.com.",
+   "source": "live",
+   "oracle_json": "live/cloudflare.com.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385400,
+   "proof_bin": "live/cloudflare.com.bin",
+   "proof_bytes": 5161,
+   "signature_window_days": 1.28,
+   "valid_from": 1788364800,
+   "expires": 1788475400,
+   "expected_records": [
+    "MS=ms70274184",
+    "_neqmkgaq1lq9it5s8qmetrhbnu121wb",
+    "_wkjc0fot0d7qrvrdt78bxkj2e2o67d2",
+    "ZOOM_verify_7LFBvOO9SIigypFG2xRlMA",
+    "asv=894f6d1f9f83bcf44e4b1bc40bc1c4aa",
+    "apple-domain-verification=DNnWJoArJobFJKhJ",
+    "status-page-domain-verification=r14frwljwbxs",
+    "canva-site-verification=oOyaVnHC-OiFoR1BPvetNA",
+    "docker-verification=c578e21c-34fb-4474-9b90-d55ee4cba10c",
+    "miro-verification=bdd7dfa0a49adfb43ad6ddfaf797633246c07356",
+    "facebook-domain-verification=h9mm6zopj6p2po54woa16m5bskm6oo",
+    "databank-domain-verification-hkehd2=fzgu4kmbZwMoW99zENgO4u8NL",
+    "onetrust-domain-verification=bd5cd08a1e9644799fdb98ed7d60c9cb",
+    "uber-domain-verification=58086039-150a-42a4-a4be-b4032921aa0f",
+    "logmein-verification-code=b3433c86-3823-4808-8a7e-58042469f654",
+    "creatopy-domain-verification=97d2ca50-9b6f-4a21-9bdb-fbb630e4cec7",
+    "google-site-verification=C7thfNeXVahkVhniiqTI1iSVnElKR_kBBtnEHkeGDlo",
+    "google-site-verification=ZdlQZLBBAPkxeFTCM1rpiB_ibtGff_JF5KllNKwDR9I",
+    "liveramp-site-verification=EhH1MqgwbndTWl1AN64hOTKz7hc1s80yUpchLbgpfY0",
+    "stripe-verification=5096d01ff2cf194285dd51cae18f24fa9c26dc928cebac3636d462b4c6925623",
+    "stripe-verification=bf1a94e6b16ace2502a4a7fff574a25c8a45291054960c883c59be39d1788db9",
+    "drift-domain-verification=f037808a26ae8b25bc13b1f1f2b4c3e0f78c03e67f24cefdd4ec520efa8e719f",
+    "cisco-ci-domain-verification=27e926884619804ef987ae4aa1c4168f6b152ada84f4c8bfc74eb2bd2912ad72",
+    "atlassian-domain-verification=WxxKyN9aLnjEsoOjUYI6T0bb5vcqmKzaIkC9Rx2QkNb751G3LL/cus8/ZDOgh8xB",
+    "_saml-domain-challenge.2dc00405-79cd-457b-b288-a119c6f0c7b7.71996d53-d178-4ba9-bef4-7f7e46edab74.cloudflare.com=1c8736fd-84b2-4197-985f-3fb2852f2457",
+    "DirectFedAuthUrl=https://cloudflare-security.cloudflareaccess.com/cdn-cgi/access/sso/saml/dba6756ad312fc13c45f705cf7f5e87f4d658be016c41f950329aa4085b3abc1",
+    "DirectFedAuthUrl=https://cloudflare-security.cloudflareaccess.com/cdn-cgi/access/sso/saml/ebec933773c69c93420d13e6776adb8c4a190f6281f9d132bcebd7dcb0967bdd",
+    "v=spf1 ip4:199.15.212.0/22 ip4:173.245.48.0/20 include:_spf.google.com include:spf1.mcsv.net include:spf.mandrillapp.com include:mail.zendesk.com include:stspg-customer.com include:_spf.salesforce.com -all"
+   ],
+   "structure": {
+    "rr_count": 43,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 28,
+     "RRSIG": 6,
+     "DNSKEY": 7,
+     "DS": 2
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "cloudflare.com.",
+     "com.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 43,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1788475400,
+    "max_cache_ttl": 300,
+    "records": [
+     "MS=ms70274184",
+     "_neqmkgaq1lq9it5s8qmetrhbnu121wb",
+     "_wkjc0fot0d7qrvrdt78bxkj2e2o67d2",
+     "ZOOM_verify_7LFBvOO9SIigypFG2xRlMA",
+     "asv=894f6d1f9f83bcf44e4b1bc40bc1c4aa",
+     "apple-domain-verification=DNnWJoArJobFJKhJ",
+     "status-page-domain-verification=r14frwljwbxs",
+     "canva-site-verification=oOyaVnHC-OiFoR1BPvetNA",
+     "docker-verification=c578e21c-34fb-4474-9b90-d55ee4cba10c",
+     "miro-verification=bdd7dfa0a49adfb43ad6ddfaf797633246c07356",
+     "facebook-domain-verification=h9mm6zopj6p2po54woa16m5bskm6oo",
+     "databank-domain-verification-hkehd2=fzgu4kmbZwMoW99zENgO4u8NL",
+     "onetrust-domain-verification=bd5cd08a1e9644799fdb98ed7d60c9cb",
+     "uber-domain-verification=58086039-150a-42a4-a4be-b4032921aa0f",
+     "logmein-verification-code=b3433c86-3823-4808-8a7e-58042469f654",
+     "creatopy-domain-verification=97d2ca50-9b6f-4a21-9bdb-fbb630e4cec7",
+     "google-site-verification=C7thfNeXVahkVhniiqTI1iSVnElKR_kBBtnEHkeGDlo",
+     "google-site-verification=ZdlQZLBBAPkxeFTCM1rpiB_ibtGff_JF5KllNKwDR9I",
+     "liveramp-site-verification=EhH1MqgwbndTWl1AN64hOTKz7hc1s80yUpchLbgpfY0",
+     "stripe-verification=5096d01ff2cf194285dd51cae18f24fa9c26dc928cebac3636d462b4c6925623",
+     "stripe-verification=bf1a94e6b16ace2502a4a7fff574a25c8a45291054960c883c59be39d1788db9",
+     "drift-domain-verification=f037808a26ae8b25bc13b1f1f2b4c3e0f78c03e67f24cefdd4ec520efa8e719f",
+     "cisco-ci-domain-verification=27e926884619804ef987ae4aa1c4168f6b152ada84f4c8bfc74eb2bd2912ad72",
+     "atlassian-domain-verification=WxxKyN9aLnjEsoOjUYI6T0bb5vcqmKzaIkC9Rx2QkNb751G3LL/cus8/ZDOgh8xB",
+     "_saml-domain-challenge.2dc00405-79cd-457b-b288-a119c6f0c7b7.71996d53-d178-4ba9-bef4-7f7e46edab74.cloudflare.com=1c8736fd-84b2-4197-985f-3fb2852f2457",
+     "DirectFedAuthUrl=https://cloudflare-security.cloudflareaccess.com/cdn-cgi/access/sso/saml/dba6756ad312fc13c45f705cf7f5e87f4d658be016c41f950329aa4085b3abc1",
+     "DirectFedAuthUrl=https://cloudflare-security.cloudflareaccess.com/cdn-cgi/access/sso/saml/ebec933773c69c93420d13e6776adb8c4a190f6281f9d132bcebd7dcb0967bdd",
+     "v=spf1 ip4:199.15.212.0/22 ip4:173.245.48.0/20 include:_spf.google.com include:spf1.mcsv.net include:spf.mandrillapp.com include:mail.zendesk.com include:stspg-customer.com include:_spf.salesforce.com -all"
+    ]
+   },
+   "proof_sha256": "7d6651d2793ca10b91a357a336c7a7a2d0e2abf99b68a56648eeaccdb2347c81"
+  },
+  {
+   "case": "live/cname.wildcard_test.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "cname.wildcard_test.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/cname.wildcard_test.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385403,
+   "proof_bin": "live/cname.wildcard_test.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 3443,
+   "signature_window_days": 11.39,
+   "valid_from": 1788364800,
+   "expires": 1789348782,
+   "expected_records": [
+    "wildcard_test"
+   ],
+   "structure": {
+    "rr_count": 20,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 1,
+     "RRSIG": 7,
+     "NSEC3": 1,
+     "DNSKEY": 8,
+     "DS": 3
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [
+     {
+      "hash_alg": 1,
+      "flags": 0,
+      "iterations": 0,
+      "salt": "53a1ec3e1082a235"
+     }
+    ],
+    "has_nsec": false,
+    "has_nsec3": true,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": true
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 20,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1789348782,
+    "max_cache_ttl": 30,
+    "records": [
+     "wildcard_test"
+    ]
+   },
+   "proof_sha256": "afb16c8d6382e20d627b8a549d74239be599041bd4d44e098a9007354570d383"
+  },
+  {
+   "case": "live/cname_test.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "cname_test.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/cname_test.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385402,
+   "proof_bin": "live/cname_test.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 3421,
+   "signature_window_days": 11.39,
+   "valid_from": 1788364800,
+   "expires": 1789348782,
+   "expected_records": [
+    "dnssec_prover_test"
+   ],
+   "structure": {
+    "rr_count": 20,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "CNAME": 1,
+     "RRSIG": 7,
+     "TXT": 1,
+     "DNSKEY": 8,
+     "DS": 3
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": true,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 20,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1789348782,
+    "max_cache_ttl": 30,
+    "records": [
+     "dnssec_prover_test"
+    ]
+   },
+   "proof_sha256": "046eb18146839c6bb6899f5df11b8fae468e89d1fee5a15876761e0a16a3c2dd"
+  },
+  {
+   "case": "live/dname_test.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "dname_test.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/dname_test.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "invalid",
+   "capture_time_unix": 1788385407,
+   "proof_bin": null,
+   "invalid_at_layer": "dnssec",
+   "oracle_error": "could not build proof via 1.1.1.1:53: The server provided a response we could not understand",
+   "reason": "NODATA at a DNAME owner name, proved by an NSEC3 whose type bitmap is DNAME RRSIG only. The name is a DNAME, so querying TXT at the owner itself returns nothing, while querying TXT below it redirects. Compare with the successful wildcard_a.wildcard_b.dname_test case, which is the same DNAME exercised from below."
+  },
+  {
+   "case": "live/google.com",
+   "query_name": "google.com.",
+   "source": "live",
+   "oracle_json": "live/google.com.json",
+   "expected": "invalid",
+   "capture_time_unix": 1788385408,
+   "proof_bin": null,
+   "invalid_at_layer": "dnssec",
+   "oracle_error": "could not build proof via 1.1.1.1:53: The server indicated the records we needed were not DNSSEC-authenticated",
+   "reason": "Unsigned zone. google.com publishes no DS at .com, so there is no chain to validate and the proof builder correctly refuses rather than falling back to insecure. A port must fail here, and must fail for this reason, not because a signature did not verify."
+  },
+  {
+   "case": "live/iis.se",
+   "query_name": "iis.se.",
+   "source": "live",
+   "oracle_json": "live/iis.se.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385408,
+   "proof_bin": "live/iis.se.bin",
+   "proof_bytes": 3415,
+   "signature_window_days": 13.04,
+   "valid_from": 1788364800,
+   "expires": 1789491600,
+   "expected_records": [
+    "v=spf1 ip4:45.155.96.0/22 ip4:91.226.36.0/23 ip4:213.108.24.0/23 ip6:2001:67c:124c::/48 ip6:2a10:ba00::/32 ip4:54.240.55.102/31 ip4:62.209.161.227 ip4:159.253.30.216 include:spf.protection.outlook.com include:servers.mcsv.net -all",
+    "MS=ms60197975",
+    "google-site-verification=QIgFxn3B9yYwzvvW7Q_nt8jR2ybFWG_1s3Jo2-cXH_g"
+   ],
+   "structure": {
+    "rr_count": 18,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 3,
+     "RRSIG": 6,
+     "DNSKEY": 7,
+     "DS": 2
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "iis.se.",
+     "se.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 18,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1789491600,
+    "max_cache_ttl": 3600,
+    "records": [
+     "v=spf1 ip4:45.155.96.0/22 ip4:91.226.36.0/23 ip4:213.108.24.0/23 ip6:2001:67c:124c::/48 ip6:2a10:ba00::/32 ip4:54.240.55.102/31 ip4:62.209.161.227 ip4:159.253.30.216 include:spf.protection.outlook.com include:servers.mcsv.net -all",
+     "MS=ms60197975",
+     "google-site-verification=QIgFxn3B9yYwzvvW7Q_nt8jR2ybFWG_1s3Jo2-cXH_g"
+    ]
+   },
+   "proof_sha256": "f7f75f393cdfe63316e88c62bbb1fabb5f3c96c337c9f0a2b30227f8fdcfae51"
+  },
+  {
+   "case": "live/invalid.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "invalid.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/invalid.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385401,
+   "proof_bin": "live/invalid.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 3378,
+   "signature_window_days": 11.39,
+   "valid_from": 1788364800,
+   "expires": 1789348782,
+   "expected_records": [
+    "BiTcOiN:?BC=bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l",
+    "bitcoin:?bc=bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l"
+   ],
+   "structure": {
+    "rr_count": 19,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 2,
+     "RRSIG": 6,
+     "DNSKEY": 8,
+     "DS": 3
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 19,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1789348782,
+    "max_cache_ttl": 30,
+    "records": [
+     "BiTcOiN:?BC=bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l",
+     "bitcoin:?bc=bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l"
+    ]
+   },
+   "proof_sha256": "553b48e53cc865ba6856b49d0185c47a3a40a3f55efdd05331a4bfd04bb641f1"
+  },
+  {
+   "case": "live/matt.user._bitcoin-payment.mattcorallo.com",
+   "query_name": "matt.user._bitcoin-payment.mattcorallo.com.",
+   "source": "live",
+   "oracle_json": "live/matt.user._bitcoin-payment.mattcorallo.com.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385407,
+   "proof_bin": "live/matt.user._bitcoin-payment.mattcorallo.com.bin",
+   "proof_bytes": 3104,
+   "signature_window_days": 5.43,
+   "valid_from": 1788364800,
+   "expires": 1788834371,
+   "expected_records": [
+    "as long as it doesn't start with bitcoin:, other records should be ignored",
+    "bitcoin:bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l?lno=lno1zr5qyugqgskrk70kqmuq7v3dnr2fnmhukps9n8hut48vkqpqnskt2svsqwjakp7k6pyhtkuxw7y2kqmsxlwruhzqv0zsnhh9q3t9xhx39suc6qsr07ekm5esdyum0w66mnx8vdquwvp7dp5jp7j3v5cp6aj0w329fnkqqv60q96sz5nkrc5r95qffx002q53tqdk8x9m2tmt85jtpmcycvfnrpx3lr45h2g7na3sec7xguctfzzcm8jjqtj5ya27te60j03vpt0vq9tm2n9yxl2hngfnmygesa25s4u4zlxewqpvp94xt7rur4rhxunwkthk9vly3lm5hh0pqv4aymcqejlgssnlpzwlggykkajp7yjs5jvr2agkyypcdlj280cy46jpynsezrcj2kwa2lyr8xvd6lfkph4xrxtk2xc3lpq"
+   ],
+   "structure": {
+    "rr_count": 18,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 2,
+     "RRSIG": 6,
+     "DS": 3,
+     "DNSKEY": 7
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "mattcorallo.com.",
+     "com.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 18,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1788834371,
+    "max_cache_ttl": 3600,
+    "records": [
+     "as long as it doesn't start with bitcoin:, other records should be ignored",
+     "bitcoin:bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l?lno=lno1zr5qyugqgskrk70kqmuq7v3dnr2fnmhukps9n8hut48vkqpqnskt2svsqwjakp7k6pyhtkuxw7y2kqmsxlwruhzqv0zsnhh9q3t9xhx39suc6qsr07ekm5esdyum0w66mnx8vdquwvp7dp5jp7j3v5cp6aj0w329fnkqqv60q96sz5nkrc5r95qffx002q53tqdk8x9m2tmt85jtpmcycvfnrpx3lr45h2g7na3sec7xguctfzzcm8jjqtj5ya27te60j03vpt0vq9tm2n9yxl2hngfnmygesa25s4u4zlxewqpvp94xt7rur4rhxunwkthk9vly3lm5hh0pqv4aymcqejlgssnlpzwlggykkajp7yjs5jvr2agkyypcdlj280cy46jpynsezrcj2kwa2lyr8xvd6lfkph4xrxtk2xc3lpq"
+    ]
+   },
+   "proof_sha256": "0040425566fcdab36a32bdd5b0760edaf9eea8422b9904fe82d6be65865ac5d7"
+  },
+  {
+   "case": "live/mattcorallo.com",
+   "query_name": "mattcorallo.com.",
+   "source": "live",
+   "oracle_json": "live/mattcorallo.com.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385400,
+   "proof_bin": "live/mattcorallo.com.bin",
+   "proof_bytes": 2480,
+   "signature_window_days": 5.93,
+   "valid_from": 1788321600,
+   "expires": 1788834371,
+   "expected_records": [
+    "v=spf1 ip4:69.59.18.99 ip6:2620:6e:a000:1::99 ~all"
+   ],
+   "structure": {
+    "rr_count": 17,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 1,
+     "RRSIG": 6,
+     "DNSKEY": 7,
+     "DS": 3
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "mattcorallo.com.",
+     "com.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 17,
+    "chain_valid": true,
+    "valid_from": 1788321600,
+    "expires": 1788834371,
+    "max_cache_ttl": 86400,
+    "records": [
+     "v=spf1 ip4:69.59.18.99 ip6:2620:6e:a000:1::99 ~all"
+    ]
+   },
+   "proof_sha256": "94b7619d4553d369a6970eb9499ee968a00eb54e5a3d866b1290fbd968cd01ec"
+  },
+  {
+   "case": "live/nested.zent_test.wildcard_test.nsec_tests.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "nested.zent_test.wildcard_test.nsec_tests.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/nested.zent_test.wildcard_test.nsec_tests.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385406,
+   "proof_bin": "live/nested.zent_test.wildcard_test.nsec_tests.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 4051,
+   "signature_window_days": 7.63,
+   "valid_from": 1788377213,
+   "expires": 1789036403,
+   "expected_records": [
+    "ent_test"
+   ],
+   "structure": {
+    "rr_count": 24,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 1,
+     "RRSIG": 8,
+     "DNSKEY": 11,
+     "DS": 4
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "nsec_tests.dnssec_proof_tests.bitcoin.ninja.",
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 24,
+    "chain_valid": true,
+    "valid_from": 1788377213,
+    "expires": 1789036403,
+    "max_cache_ttl": 30,
+    "records": [
+     "ent_test"
+    ]
+   },
+   "proof_sha256": "c3430ba28d67f893f15be386a3e54b777eaac4e72819cb5c276e9f2b924f41da"
+  },
+  {
+   "case": "live/nlnetlabs.nl",
+   "query_name": "nlnetlabs.nl.",
+   "source": "live",
+   "oracle_json": "live/nlnetlabs.nl.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385407,
+   "proof_bin": "live/nlnetlabs.nl.bin",
+   "proof_bytes": 3161,
+   "signature_window_days": 13.04,
+   "valid_from": 1788364800,
+   "expires": 1789491600,
+   "expected_records": [
+    "Stichting NLnet Labs zone",
+    "1password-site-verification=QAXPQAT46NGABHYNFZ5HGZUELQ",
+    "v=spf1 +a include:_spf.google.com include:mailbox.org ip4:185.49.140.0/22 ip6:2a04:b900::/29 ~all"
+   ],
+   "structure": {
+    "rr_count": 19,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 3,
+     "RRSIG": 6,
+     "DS": 2,
+     "DNSKEY": 8
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "nlnetlabs.nl.",
+     "nl.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 19,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1789491600,
+    "max_cache_ttl": 240,
+    "records": [
+     "Stichting NLnet Labs zone",
+     "1password-site-verification=QAXPQAT46NGABHYNFZ5HGZUELQ",
+     "v=spf1 +a include:_spf.google.com include:mailbox.org ip4:185.49.140.0/22 ip6:2a04:b900::/29 ~all"
+    ]
+   },
+   "proof_sha256": "c14990341613fdbccedeb82cf6ac8ca7071b7ffa011deff45e044190761fe389"
+  },
+  {
+   "case": "live/nonexistent-tld-8f3a2b.invalidtldxyzzy",
+   "query_name": "nonexistent-tld-8f3a2b.invalidtldxyzzy.",
+   "source": "live",
+   "oracle_json": "live/nonexistent-tld-8f3a2b.invalidtldxyzzy.json",
+   "expected": "invalid",
+   "capture_time_unix": 1788385408,
+   "proof_bin": null,
+   "invalid_at_layer": "dnssec",
+   "oracle_error": "could not build proof via 1.1.1.1:53: The server indicated the requested hostname does not exist",
+   "reason": "Nonexistent TLD, so the denial comes from the signed root zone itself. Exercises refusal at the very top of the chain."
+  },
+  {
+   "case": "live/notcname_wildcard_test.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "notcname_wildcard_test.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/notcname_wildcard_test.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385403,
+   "proof_bin": "live/notcname_wildcard_test.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 3195,
+   "signature_window_days": 11.39,
+   "valid_from": 1788364800,
+   "expires": 1789348782,
+   "expected_records": [
+    "wrongly_dnamed"
+   ],
+   "structure": {
+    "rr_count": 18,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 1,
+     "RRSIG": 6,
+     "DNSKEY": 8,
+     "DS": 3
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 18,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1789348782,
+    "max_cache_ttl": 30,
+    "records": [
+     "wrongly_dnamed"
+    ]
+   },
+   "proof_sha256": "d90917187184a39099995b796c231f302c52a1addd95a3fb79bde00beba6aeca"
+  },
+  {
+   "case": "live/notdname_test.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "notdname_test.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/notdname_test.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385407,
+   "proof_bin": "live/notdname_test.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 3173,
+   "signature_window_days": 11.39,
+   "valid_from": 1788364800,
+   "expires": 1789348782,
+   "expected_records": [
+    "not_dnamed"
+   ],
+   "structure": {
+    "rr_count": 18,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 1,
+     "RRSIG": 6,
+     "DNSKEY": 8,
+     "DS": 3
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 18,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1789348782,
+    "max_cache_ttl": 30,
+    "records": [
+     "not_dnamed"
+    ]
+   },
+   "proof_sha256": "f8be6c82b2d346a75067c9956a6323b4cda294514bd8dc15e267402ae0a1765c"
+  },
+  {
+   "case": "live/override.wildcard_test.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "override.wildcard_test.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/override.wildcard_test.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385403,
+   "proof_bin": "live/override.wildcard_test.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 3203,
+   "signature_window_days": 11.39,
+   "valid_from": 1788364800,
+   "expires": 1789348782,
+   "expected_records": [
+    "override_wildcard_test"
+   ],
+   "structure": {
+    "rr_count": 18,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 1,
+     "RRSIG": 6,
+     "DNSKEY": 8,
+     "DS": 3
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 18,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1789348782,
+    "max_cache_ttl": 30,
+    "records": [
+     "override_wildcard_test"
+    ]
+   },
+   "proof_sha256": "28a3cbb7f7f65b38be9eb56145fd2a88f3af809d94f5fcddce3096a576c8f546"
+  },
+  {
+   "case": "live/override.wildcard_test.nsec_tests.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "override.wildcard_test.nsec_tests.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/override.wildcard_test.nsec_tests.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385405,
+   "proof_bin": "live/override.wildcard_test.nsec_tests.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 4049,
+   "signature_window_days": 11.25,
+   "valid_from": 1788377213,
+   "expires": 1789348782,
+   "expected_records": [
+    "override_wildcard_test"
+   ],
+   "structure": {
+    "rr_count": 24,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 1,
+     "RRSIG": 8,
+     "DS": 4,
+     "DNSKEY": 11
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "nsec_tests.dnssec_proof_tests.bitcoin.ninja.",
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 24,
+    "chain_valid": true,
+    "valid_from": 1788377213,
+    "expires": 1789348782,
+    "max_cache_ttl": 30,
+    "records": [
+     "override_wildcard_test"
+    ]
+   },
+   "proof_sha256": "4cb86c380c62e05f5c5588a0f0dfcd0997599cff30727a3a8ba662e411b9ee93"
+  },
+  {
+   "case": "live/override.x_domain_cname_wild.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "override.x_domain_cname_wild.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/override.x_domain_cname_wild.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385401,
+   "proof_bin": "live/override.x_domain_cname_wild.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 3291,
+   "signature_window_days": 11.39,
+   "valid_from": 1788364800,
+   "expires": 1789348782,
+   "expected_records": [
+    "BITCOIN:?BC=BC1QYYQ734DCNHHCWYW8YJXSWXG4P7K9NXU0QT84QZ"
+   ],
+   "structure": {
+    "rr_count": 18,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 1,
+     "RRSIG": 6,
+     "DNSKEY": 8,
+     "DS": 3
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 18,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1789348782,
+    "max_cache_ttl": 30,
+    "records": [
+     "BITCOIN:?BC=BC1QYYQ734DCNHHCWYW8YJXSWXG4P7K9NXU0QT84QZ"
+    ]
+   },
+   "proof_sha256": "f027d0268c1134083477b41cb5ccf2ca1f1f2472282e45ce11aededb92fbd7ac"
+  },
+  {
+   "case": "live/satoshi.user._bitcoin-payment.twelve.cash",
+   "query_name": "satoshi.user._bitcoin-payment.twelve.cash.",
+   "source": "live",
+   "oracle_json": "live/satoshi.user._bitcoin-payment.twelve.cash.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385432,
+   "proof_bin": "live/satoshi.user._bitcoin-payment.twelve.cash.bin",
+   "proof_bytes": 4556,
+   "signature_window_days": 1.28,
+   "valid_from": 1788364800,
+   "expires": 1788475410,
+   "expected_records": [
+    "bitcoin:b12=lno1pgtyymmvwscnygzsv9uk6etwwssyzerywfjhxuckyypme4su43qu44v09r28p6whddr62zkyuj68ha68kky2za4zrdu9uuq",
+    "bitcoin:?lno=lnurl1dp68gurn8ghj7ampd3kx2ar0veekzar0wd5xjtnrdakj7tnhv4kxctttdehhwm30d3h82unvwqhhqutzd96xxmmfdcegs8cr",
+    "bitcoin:?lno=lno1zrxq8pjw7qjlm68mtp7e3yvxee4y5xrgjhhyf2fxhlphpckrvevh50u0qf2yrw2vrc2sdeyaem8vtlq3prlmk6kkpghkmdcjkt2q4c6jgf742qszvsv9dftqzzd6exzwdkverr2rsrk20h0g7q9n388gka0wmvqjrvpsqv7cteq97tu7q5u8al3vavg0ez4g9uptvpmfn73gxl37c8vsdje87m58kxw0taqhp593ugxmzne0cydgqxlvq03e38rsjah4tnr8eg52nazdjka2f6ckmzuwu3r5yuvvjr8srfussqqs6xflap2vnlxfr4r5rd9xadts7s",
+    "bitcoin:?lno=lno1zrxq8pjw7qjlm68mtp7e3yvxee4y5xrgjhhyf2fxhlphpckrvevh50u0qfv6nxzdxptql8w87tt66ehzd7m9v2za9ws2frx5rulve8us4kzukqsrutlm5pzxp7jdu60w9sxazu2av5tu7srf9m59ja0vhgcv592vrlvqqveaq24uvejhl9hjqrzx55sekfkrk5jkv3vd8mykkcqtrt4eqrxlw7n37mulrp9rqyfg6rezekmgu2kg74j3qdgm84k58gk02q7dmkj6d8rrv4ungvsfefeevvpg70h36vgqcvjscqqsrvphltjea6l8393jcn79zqq8fg",
+    "bitcoin:?lno=lno1zrxq8pjw7qjlm68mtp7e3yvxee4y5xrgjhhyf2fxhlphpckrvevh50u0qgt78zh2xv4km37d6qzm45r9dp5etrr80myldt4sfujmlc6eypwjzqsrkr35qwfzjrenpnu98r5n4fnr3u2u44l86jshdgaj836tp6ra0vvsqvmg6umk2lete8n6efqdny6fcgxdlr5mapry4y6fpcft6zy9agdnmxlsudf3rqdvmpuwena8qmaqh2d9akc0q0e4xfdtsa4cf7k0a0c6utw54jv4qwd8xh4a675v0xdmjhkgntzhjqqsrntffs0ju8ukcu6q3ucgauxudc"
+   ],
+   "structure": {
+    "rr_count": 21,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 5,
+     "RRSIG": 6,
+     "DNSKEY": 8,
+     "DS": 2
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "twelve.cash.",
+     "cash.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 21,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1788475410,
+    "max_cache_ttl": 300,
+    "records": [
+     "bitcoin:b12=lno1pgtyymmvwscnygzsv9uk6etwwssyzerywfjhxuckyypme4su43qu44v09r28p6whddr62zkyuj68ha68kky2za4zrdu9uuq",
+     "bitcoin:?lno=lnurl1dp68gurn8ghj7ampd3kx2ar0veekzar0wd5xjtnrdakj7tnhv4kxctttdehhwm30d3h82unvwqhhqutzd96xxmmfdcegs8cr",
+     "bitcoin:?lno=lno1zrxq8pjw7qjlm68mtp7e3yvxee4y5xrgjhhyf2fxhlphpckrvevh50u0qf2yrw2vrc2sdeyaem8vtlq3prlmk6kkpghkmdcjkt2q4c6jgf742qszvsv9dftqzzd6exzwdkverr2rsrk20h0g7q9n388gka0wmvqjrvpsqv7cteq97tu7q5u8al3vavg0ez4g9uptvpmfn73gxl37c8vsdje87m58kxw0taqhp593ugxmzne0cydgqxlvq03e38rsjah4tnr8eg52nazdjka2f6ckmzuwu3r5yuvvjr8srfussqqs6xflap2vnlxfr4r5rd9xadts7s",
+     "bitcoin:?lno=lno1zrxq8pjw7qjlm68mtp7e3yvxee4y5xrgjhhyf2fxhlphpckrvevh50u0qfv6nxzdxptql8w87tt66ehzd7m9v2za9ws2frx5rulve8us4kzukqsrutlm5pzxp7jdu60w9sxazu2av5tu7srf9m59ja0vhgcv592vrlvqqveaq24uvejhl9hjqrzx55sekfkrk5jkv3vd8mykkcqtrt4eqrxlw7n37mulrp9rqyfg6rezekmgu2kg74j3qdgm84k58gk02q7dmkj6d8rrv4ungvsfefeevvpg70h36vgqcvjscqqsrvphltjea6l8393jcn79zqq8fg",
+     "bitcoin:?lno=lno1zrxq8pjw7qjlm68mtp7e3yvxee4y5xrgjhhyf2fxhlphpckrvevh50u0qgt78zh2xv4km37d6qzm45r9dp5etrr80myldt4sfujmlc6eypwjzqsrkr35qwfzjrenpnu98r5n4fnr3u2u44l86jshdgaj836tp6ra0vvsqvmg6umk2lete8n6efqdny6fcgxdlr5mapry4y6fpcft6zy9agdnmxlsudf3rqdvmpuwena8qmaqh2d9akc0q0e4xfdtsa4cf7k0a0c6utw54jv4qwd8xh4a675v0xdmjhkgntzhjqqsrntffs0ju8ukcu6q3ucgauxudc"
+    ]
+   },
+   "proof_sha256": "9377b2d6623e876b91a45d8069b69c80bb8b683fb019178df660eab4424a50f4"
+  },
+  {
+   "case": "live/send.some.user._bitcoin-payment.satsto.me",
+   "query_name": "send.some.user._bitcoin-payment.satsto.me.",
+   "source": "live",
+   "oracle_json": "live/send.some.user._bitcoin-payment.satsto.me.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385407,
+   "proof_bin": "live/send.some.user._bitcoin-payment.satsto.me.bin",
+   "proof_bytes": 5222,
+   "signature_window_days": 5.43,
+   "valid_from": 1788364800,
+   "expires": 1788834371,
+   "expected_records": [
+    "as long as it doesn't start with bitcoin:, other records should be ignored",
+    "bitcoin:bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l?lno=lno1zr5qyugqgskrk70kqmuq7v3dnr2fnmhukps9n8hut48vkqpqnskt2svsqwjakp7k6pyhtkuxw7y2kqmsxlwruhzqv0zsnhh9q3t9xhx39suc6qsr07ekm5esdyum0w66mnx8vdquwvp7dp5jp7j3v5cp6aj0w329fnkqqv60q96sz5nkrc5r95qffx002q53tqdk8x9m2tmt85jtpmcycvfnrpx3lr45h2g7na3sec7xguctfzzcm8jjqtj5ya27te60j03vpt0vq9tm2n9yxl2hngfnmygesa25s4u4zlxewqpvp94xt7rur4rhxunwkthk9vly3lm5hh0pqv4aymcqejlgssnlpzwlggykkajp7yjs5jvr2agkyypcdlj280cy46jpynsezrcj2kwa2lyr8xvd6lfkph4xrxtk2xc3lpq"
+   ],
+   "structure": {
+    "rr_count": 33,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "CNAME": 1,
+     "RRSIG": 11,
+     "TXT": 2,
+     "DNSKEY": 13,
+     "DS": 6
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "satsto.me.",
+     "mattcorallo.com.",
+     "com.",
+     "me.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": true,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 33,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1788834371,
+    "max_cache_ttl": 3600,
+    "records": [
+     "as long as it doesn't start with bitcoin:, other records should be ignored",
+     "bitcoin:bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l?lno=lno1zr5qyugqgskrk70kqmuq7v3dnr2fnmhukps9n8hut48vkqpqnskt2svsqwjakp7k6pyhtkuxw7y2kqmsxlwruhzqv0zsnhh9q3t9xhx39suc6qsr07ekm5esdyum0w66mnx8vdquwvp7dp5jp7j3v5cp6aj0w329fnkqqv60q96sz5nkrc5r95qffx002q53tqdk8x9m2tmt85jtpmcycvfnrpx3lr45h2g7na3sec7xguctfzzcm8jjqtj5ya27te60j03vpt0vq9tm2n9yxl2hngfnmygesa25s4u4zlxewqpvp94xt7rur4rhxunwkthk9vly3lm5hh0pqv4aymcqejlgssnlpzwlggykkajp7yjs5jvr2agkyypcdlj280cy46jpynsezrcj2kwa2lyr8xvd6lfkph4xrxtk2xc3lpq"
+    ]
+   },
+   "proof_sha256": "c152b912a3f24c6c9c43753a19242378534bf1f5dfcbe758a9eb221b18ffd5f6"
+  },
+  {
+   "case": "live/simple.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "simple.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/simple.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385401,
+   "proof_bin": "live/simple.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 3337,
+   "signature_window_days": 11.39,
+   "valid_from": 1788364800,
+   "expires": 1789348782,
+   "expected_records": [
+    "bitcoin is cool!",
+    "bitcoin:?bc=bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l"
+   ],
+   "structure": {
+    "rr_count": 19,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 2,
+     "RRSIG": 6,
+     "DNSKEY": 8,
+     "DS": 3
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 19,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1789348782,
+    "max_cache_ttl": 30,
+    "records": [
+     "bitcoin is cool!",
+     "bitcoin:?bc=bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l"
+    ]
+   },
+   "proof_sha256": "f32fec4d7c4992cb88ea18df02be0c050ff0d765c1eef11d68cf900f6ab9cb25"
+  },
+  {
+   "case": "live/test.user._bitcoin-payment.twelve.cash",
+   "query_name": "test.user._bitcoin-payment.twelve.cash.",
+   "source": "live",
+   "oracle_json": "live/test.user._bitcoin-payment.twelve.cash.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385432,
+   "proof_bin": "live/test.user._bitcoin-payment.twelve.cash.bin",
+   "proof_bytes": 3331,
+   "signature_window_days": 1.28,
+   "valid_from": 1788364800,
+   "expires": 1788475432,
+   "expected_records": [
+    "bitcoin:bc1p73p4sc52mdamccfrth4gn8wull0h7ywkzzn6d8e2mxqr4m7evdqqwusn64?lno=lno1pqqq5xj5wajkcan9gdshx6pq23jhxarfdenjqstyv3ex2umnzcss80xkrjkyrjk43u5dgu8f6a450fg2cnjtg7lhg76c3gtk5gdhshns&lnurl=lnurl1dp68gurn8ghj7anvwshxwef09emk2mrv944kummhdchkcmn4wfk8qte3xf6x2um50n5cup"
+   ],
+   "structure": {
+    "rr_count": 17,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 1,
+     "RRSIG": 6,
+     "DNSKEY": 8,
+     "DS": 2
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "twelve.cash.",
+     "cash.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 17,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1788475432,
+    "max_cache_ttl": 3600,
+    "records": [
+     "bitcoin:bc1p73p4sc52mdamccfrth4gn8wull0h7ywkzzn6d8e2mxqr4m7evdqqwusn64?lno=lno1pqqq5xj5wajkcan9gdshx6pq23jhxarfdenjqstyv3ex2umnzcss80xkrjkyrjk43u5dgu8f6a450fg2cnjtg7lhg76c3gtk5gdhshns&lnurl=lnurl1dp68gurn8ghj7anvwshxwef09emk2mrv944kummhdchkcmn4wfk8qte3xf6x2um50n5cup"
+    ]
+   },
+   "proof_sha256": "5c5ec7dc13e51d664e338f8eb25f659ab80b2343a783317db5c2008bb533492f"
+  },
+  {
+   "case": "live/this-name-does-not-exist-8f3a2b.bitcoin.ninja",
+   "query_name": "this-name-does-not-exist-8f3a2b.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/this-name-does-not-exist-8f3a2b.bitcoin.ninja.json",
+   "expected": "invalid",
+   "capture_time_unix": 1788385408,
+   "proof_bin": null,
+   "invalid_at_layer": "dnssec",
+   "oracle_error": "could not build proof via 1.1.1.1:53: The server indicated the requested hostname does not exist",
+   "reason": "Name does not exist under an NSEC3 zone. Real NXDOMAIN with NSEC3 records, salt 53A1EC3E1082A235 at capture time. The oracle names this one properly: 'the requested hostname does not exist'."
+  },
+  {
+   "case": "live/twelve.user._bitcoin-payment.twelve.cash",
+   "query_name": "twelve.user._bitcoin-payment.twelve.cash.",
+   "source": "live",
+   "oracle_json": "live/twelve.user._bitcoin-payment.twelve.cash.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385432,
+   "proof_bin": "live/twelve.user._bitcoin-payment.twelve.cash.bin",
+   "proof_bytes": 3416,
+   "signature_window_days": 1.28,
+   "valid_from": 1788364800,
+   "expires": 1788475432,
+   "expected_records": [
+    "bitcoin:?lno=lno1zrxq8pjw7qjlm68mtp7e3yvxee4y5xrgjhhyf2fxhlphpckrvevh50u0qf2yrw2vrc2sdeyaem8vtlq3prlmk6kkpghkmdcjkt2q4c6jgf742qszvsv9dftqzzd6exzwdkverr2rsrk20h0g7q9n388gka0wmvqjrvpsqv7cteq97tu7q5u8al3vavg0ez4g9uptvpmfn73gxl37c8vsdje87m58kxw0taqhp593ugxmzne0cydgqxlvq03e38rsjah4tnr8eg52nazdjka2f6ckmzuwu3r5yuvvjr8srfussqqs6xflap2vnlxfr4r5rd9xadts7s"
+   ],
+   "structure": {
+    "rr_count": 17,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 1,
+     "RRSIG": 6,
+     "DNSKEY": 8,
+     "DS": 2
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "twelve.cash.",
+     "cash.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 17,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1788475432,
+    "max_cache_ttl": 3600,
+    "records": [
+     "bitcoin:?lno=lno1zrxq8pjw7qjlm68mtp7e3yvxee4y5xrgjhhyf2fxhlphpckrvevh50u0qf2yrw2vrc2sdeyaem8vtlq3prlmk6kkpghkmdcjkt2q4c6jgf742qszvsv9dftqzzd6exzwdkverr2rsrk20h0g7q9n388gka0wmvqjrvpsqv7cteq97tu7q5u8al3vavg0ez4g9uptvpmfn73gxl37c8vsdje87m58kxw0taqhp593ugxmzne0cydgqxlvq03e38rsjah4tnr8eg52nazdjka2f6ckmzuwu3r5yuvvjr8srfussqqs6xflap2vnlxfr4r5rd9xadts7s"
+    ]
+   },
+   "proof_sha256": "996abe8b20f167fc7471668c03a4d06b04c5005069322b43895d7531ce50cf2b"
+  },
+  {
+   "case": "live/txt_sort_order.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "txt_sort_order.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/txt_sort_order.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385402,
+   "proof_bin": "live/txt_sort_order.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 5640,
+   "signature_window_days": 11.39,
+   "valid_from": 1788364800,
+   "expires": 1789348782,
+   "expected_records": [
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaba",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaba",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaa"
+   ],
+   "structure": {
+    "rr_count": 25,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 8,
+     "RRSIG": 6,
+     "DS": 3,
+     "DNSKEY": 8
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 25,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1789348782,
+    "max_cache_ttl": 30,
+    "records": [
+     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaba",
+     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaba",
+     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaa"
+    ]
+   },
+   "proof_sha256": "cd6a33d7f9ec601b576fda3ca8039a48c7c06df37d6b4070ccecd82f3a8121b0"
+  },
+  {
+   "case": "live/txt_test.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "txt_test.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/txt_test.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385402,
+   "proof_bin": "live/txt_test.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 3171,
+   "signature_window_days": 11.39,
+   "valid_from": 1788364800,
+   "expires": 1789348782,
+   "expected_records": [
+    "dnssec_prover_test"
+   ],
+   "structure": {
+    "rr_count": 18,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 1,
+     "RRSIG": 6,
+     "DNSKEY": 8,
+     "DS": 3
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 18,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1789348782,
+    "max_cache_ttl": 30,
+    "records": [
+     "dnssec_prover_test"
+    ]
+   },
+   "proof_sha256": "c62d3796701cacc8a4cda1cfa2f339c02a7d4df051ead76cd7164c50ec7b2c23"
+  },
+  {
+   "case": "live/verisign.com",
+   "query_name": "verisign.com.",
+   "source": "live",
+   "oracle_json": "live/verisign.com.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385408,
+   "proof_bin": "live/verisign.com.bin",
+   "proof_bytes": 4378,
+   "signature_window_days": 3.35,
+   "valid_from": 1788364800,
+   "expires": 1788654499,
+   "expected_records": [
+    "emkPkSG0HbqECOPCBHWd1nTxAEaP9bU",
+    "_a6zbbdh9hz0vkncsvg2h22lp9h6brwj",
+    "_qqahezze1mjnzudq7ajo1ur9fj7hlyv",
+    "apple-domain-verification=VZse3PQypofizVfj",
+    "flexera-domain-verification-ajekzguntndwdhrv",
+    "flexera-domain-verification-mmhrajauocepbygu",
+    "jamf-site-verification=omIeBdZrvJKLHyEyUQ83Ow",
+    "google-gws-recovery-domain-verification=71996230",
+    "openai-domain-verification=dv-YQwdMe6PrrxumyNHr1RgR7kv",
+    "facebook-domain-verification=9keft74qgbjbnzfmav0oeloqxpiiuf",
+    "7e72aa8348d91ff55b0359c441f8a2e3bc82be177ed89975025aa2b32de34b09",
+    "v=spf1 include:spf-i.verisign.com include:spf-p.verisign.com ~all",
+    "google-site-verification=gcnnekAlEpu-EIsCSqvCAvtezhOec9Z6OqAfmeAECfA",
+    "ciscocidomainverification=32ade0b0270c6e8fe212bc6cf3b1d9ab4574494cc66a5e79aeec56642d97bd7a",
+    "ciscocidomainverification=7e72aa8348d91ff55b0359c441f8a2e3bc82be177ed89975025aa2b32de34b09",
+    "adobe-idp-site-verification=2265fe0e032bfd95522012da2d7a1bfe77b80c596e9b9d901f02fd5356dcddc2",
+    "atlassian-domain-verification=0XaK5Hx8Xwcrl8UiEhnlkcI5adHd5/XT753lV1mmBgR03dkHs49PFXZU4kQa6N79",
+    "paloaltonetworks-site-verification=594716eb8b31d7d7fee6308dba819de4360c027d04dfe809706ea0629330c0ef"
+   ],
+   "structure": {
+    "rr_count": 33,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 18,
+     "RRSIG": 6,
+     "DNSKEY": 7,
+     "DS": 2
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "verisign.com.",
+     "com.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 33,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1788654499,
+    "max_cache_ttl": 300,
+    "records": [
+     "emkPkSG0HbqECOPCBHWd1nTxAEaP9bU",
+     "_a6zbbdh9hz0vkncsvg2h22lp9h6brwj",
+     "_qqahezze1mjnzudq7ajo1ur9fj7hlyv",
+     "apple-domain-verification=VZse3PQypofizVfj",
+     "flexera-domain-verification-ajekzguntndwdhrv",
+     "flexera-domain-verification-mmhrajauocepbygu",
+     "jamf-site-verification=omIeBdZrvJKLHyEyUQ83Ow",
+     "google-gws-recovery-domain-verification=71996230",
+     "openai-domain-verification=dv-YQwdMe6PrrxumyNHr1RgR7kv",
+     "facebook-domain-verification=9keft74qgbjbnzfmav0oeloqxpiiuf",
+     "7e72aa8348d91ff55b0359c441f8a2e3bc82be177ed89975025aa2b32de34b09",
+     "v=spf1 include:spf-i.verisign.com include:spf-p.verisign.com ~all",
+     "google-site-verification=gcnnekAlEpu-EIsCSqvCAvtezhOec9Z6OqAfmeAECfA",
+     "ciscocidomainverification=32ade0b0270c6e8fe212bc6cf3b1d9ab4574494cc66a5e79aeec56642d97bd7a",
+     "ciscocidomainverification=7e72aa8348d91ff55b0359c441f8a2e3bc82be177ed89975025aa2b32de34b09",
+     "adobe-idp-site-verification=2265fe0e032bfd95522012da2d7a1bfe77b80c596e9b9d901f02fd5356dcddc2",
+     "atlassian-domain-verification=0XaK5Hx8Xwcrl8UiEhnlkcI5adHd5/XT753lV1mmBgR03dkHs49PFXZU4kQa6N79",
+     "paloaltonetworks-site-verification=594716eb8b31d7d7fee6308dba819de4360c027d04dfe809706ea0629330c0ef"
+    ]
+   },
+   "proof_sha256": "52d9bba3e30d61d2b0149835fc5a361d83466520364cc4e440a938b40e44bd94"
+  },
+  {
+   "case": "live/wildcard.x_domain_cname_wild.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "wildcard.x_domain_cname_wild.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/wildcard.x_domain_cname_wild.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385406,
+   "proof_bin": "live/wildcard.x_domain_cname_wild.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 5476,
+   "signature_window_days": 5.43,
+   "valid_from": 1788364800,
+   "expires": 1788834371,
+   "expected_records": [
+    "as long as it doesn't start with bitcoin:, other records should be ignored",
+    "bitcoin:bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l?lno=lno1zr5qyugqgskrk70kqmuq7v3dnr2fnmhukps9n8hut48vkqpqnskt2svsqwjakp7k6pyhtkuxw7y2kqmsxlwruhzqv0zsnhh9q3t9xhx39suc6qsr07ekm5esdyum0w66mnx8vdquwvp7dp5jp7j3v5cp6aj0w329fnkqqv60q96sz5nkrc5r95qffx002q53tqdk8x9m2tmt85jtpmcycvfnrpx3lr45h2g7na3sec7xguctfzzcm8jjqtj5ya27te60j03vpt0vq9tm2n9yxl2hngfnmygesa25s4u4zlxewqpvp94xt7rur4rhxunwkthk9vly3lm5hh0pqv4aymcqejlgssnlpzwlggykkajp7yjs5jvr2agkyypcdlj280cy46jpynsezrcj2kwa2lyr8xvd6lfkph4xrxtk2xc3lpq"
+   ],
+   "structure": {
+    "rr_count": 34,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "CNAME": 1,
+     "RRSIG": 12,
+     "TXT": 2,
+     "NSEC3": 1,
+     "DNSKEY": 12,
+     "DS": 6
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "mattcorallo.com.",
+     "ninja.",
+     "com.",
+     "."
+    ],
+    "nsec3_params": [
+     {
+      "hash_alg": 1,
+      "flags": 0,
+      "iterations": 0,
+      "salt": "53a1ec3e1082a235"
+     }
+    ],
+    "has_nsec": false,
+    "has_nsec3": true,
+    "has_cname": true,
+    "has_dname": false,
+    "has_wildcard_rrsig": true
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 34,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1788834371,
+    "max_cache_ttl": 30,
+    "records": [
+     "as long as it doesn't start with bitcoin:, other records should be ignored",
+     "bitcoin:bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l?lno=lno1zr5qyugqgskrk70kqmuq7v3dnr2fnmhukps9n8hut48vkqpqnskt2svsqwjakp7k6pyhtkuxw7y2kqmsxlwruhzqv0zsnhh9q3t9xhx39suc6qsr07ekm5esdyum0w66mnx8vdquwvp7dp5jp7j3v5cp6aj0w329fnkqqv60q96sz5nkrc5r95qffx002q53tqdk8x9m2tmt85jtpmcycvfnrpx3lr45h2g7na3sec7xguctfzzcm8jjqtj5ya27te60j03vpt0vq9tm2n9yxl2hngfnmygesa25s4u4zlxewqpvp94xt7rur4rhxunwkthk9vly3lm5hh0pqv4aymcqejlgssnlpzwlggykkajp7yjs5jvr2agkyypcdlj280cy46jpynsezrcj2kwa2lyr8xvd6lfkph4xrxtk2xc3lpq"
+    ]
+   },
+   "proof_sha256": "0f8b2bfa5fb33ceeebbb3f47cedc46acfc8fc44d20a1e5fecad68d65ea11a1ff"
+  },
+  {
+   "case": "live/wildcard_a.wildcard_b.dname_test.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "wildcard_a.wildcard_b.dname_test.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/wildcard_a.wildcard_b.dname_test.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385407,
+   "proof_bin": "live/wildcard_a.wildcard_b.dname_test.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 4435,
+   "signature_window_days": 11.39,
+   "valid_from": 1788364800,
+   "expires": 1789348782,
+   "expected_records": [
+    "wildcard_test"
+   ],
+   "structure": {
+    "rr_count": 27,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "DNAME": 1,
+     "RRSIG": 10,
+     "CNAME": 2,
+     "TXT": 1,
+     "NSEC3": 2,
+     "DNSKEY": 8,
+     "DS": 3
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [
+     {
+      "hash_alg": 1,
+      "flags": 0,
+      "iterations": 0,
+      "salt": "53a1ec3e1082a235"
+     }
+    ],
+    "has_nsec": false,
+    "has_nsec3": true,
+    "has_cname": true,
+    "has_dname": true,
+    "has_wildcard_rrsig": true
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 27,
+    "chain_valid": true,
+    "valid_from": 1788364800,
+    "expires": 1789348782,
+    "max_cache_ttl": 30,
+    "records": [
+     "wildcard_test"
+    ]
+   },
+   "proof_sha256": "5bb827e2161c4a7f2a80245f6ab8df2493d156a19ab58107ceb98203120fcca7"
+  },
+  {
+   "case": "live/www.nlnetlabs.nl",
+   "query_name": "www.nlnetlabs.nl.",
+   "source": "live",
+   "oracle_json": "live/www.nlnetlabs.nl.json",
+   "expected": "invalid",
+   "capture_time_unix": 1788385408,
+   "proof_bin": null,
+   "invalid_at_layer": "dnssec",
+   "oracle_error": "could not build proof via 1.1.1.1:53: The server provided a response we could not understand",
+   "reason": "NODATA, not NXDOMAIN. The name exists in a signed RSASHA256 zone and has A and AAAA, but no TXT. Proved by an NSEC record whose type bitmap lists A AAAA RRSIG NSEC and omits TXT. The oracle cannot distinguish this from other parse failures and says 'a response we could not understand'. A port SHOULD tell NODATA apart from a broken response; this case is here precisely to make that difference testable."
+  },
+  {
+   "case": "live/zzz9.wildcard_test.nsec_tests.dnssec_proof_tests.bitcoin.ninja",
+   "query_name": "zzz9.wildcard_test.nsec_tests.dnssec_proof_tests.bitcoin.ninja.",
+   "source": "live",
+   "oracle_json": "live/zzz9.wildcard_test.nsec_tests.dnssec_proof_tests.bitcoin.ninja.json",
+   "expected": "valid",
+   "capture_time_unix": 1788385944,
+   "proof_bin": "live/zzz9.wildcard_test.nsec_tests.dnssec_proof_tests.bitcoin.ninja.bin",
+   "proof_bytes": 4384,
+   "signature_window_days": 7.63,
+   "valid_from": 1788377213,
+   "expires": 1789036403,
+   "expected_records": [
+    "wildcard_test"
+   ],
+   "structure": {
+    "rr_count": 26,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 1,
+     "RRSIG": 9,
+     "NSEC": 1,
+     "DNSKEY": 11,
+     "DS": 4
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "nsec_tests.dnssec_proof_tests.bitcoin.ninja.",
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": true,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": true
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 26,
+    "chain_valid": true,
+    "valid_from": 1788377213,
+    "expires": 1789036403,
+    "max_cache_ttl": 30,
+    "records": [
+     "wildcard_test"
+    ]
+   },
+   "proof_sha256": "59cfe318fd0e7e49adf0054280242c7d1086d48e0e87cf2aa3e2ed1e1e07f1ca"
+  },
+  {
+   "case": "bip353/01-simple-valid",
+   "query_name": "simple.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.",
+   "human_readable_name": "simple@dnssec_proof_tests.bitcoin.ninja",
+   "source": "bip353-example",
+   "proof_bin": "bip353/01-simple-valid.bin",
+   "psbt_bin": "bip353/01-simple-valid.psbt.bin",
+   "proof_bytes": 3612,
+   "psbt_bytes": 3652,
+   "proof_sha256": "f72d592aad49d5a6d02a7d3cf5e9e6a5e6478f20e858d2a56a9677ec7f2cb18b",
+   "expected": "valid",
+   "reason": "Valid. Encodes bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l. The BIP notes the second TXT record, which does not start case-insensitively with 'bitcoin:', is ignored. Signatures were valid on 2025-08-07.",
+   "structure": {
+    "rr_count": 20,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 2,
+     "RRSIG": 6,
+     "DNSKEY": 9,
+     "DS": 3
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 20,
+    "chain_valid": true,
+    "valid_from": 1754562918,
+    "expires": 1754842932,
+    "max_cache_ttl": 30,
+    "records": [
+     "bitcoin is cool!",
+     "bitcoin:?bc=bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l"
+    ]
+   }
+  },
+  {
+   "case": "bip353/02-override-x-domain-cname-wild-valid",
+   "query_name": "override.x_domain_cname_wild.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.",
+   "human_readable_name": "override.x_domain_cname_wild@dnssec_proof_tests.bitcoin.ninja",
+   "source": "bip353-example",
+   "proof_bin": "bip353/02-override-x-domain-cname-wild-valid.bin",
+   "psbt_bin": "bip353/02-override-x-domain-cname-wild-valid.psbt.bin",
+   "proof_bytes": 3566,
+   "psbt_bytes": 3628,
+   "proof_sha256": "1402282e3c7d1550e6624f0f72c4eb1b92588b0ccce39b7b898835dfe2b80a4b",
+   "expected": "valid",
+   "reason": "Valid. Encodes BC1QYYQ734DCNHHCWYW8YJXSWXG4P7K9NXU0QT84QZ. This is the explicit override of a wildcard, so the name itself exists and no wildcard non-existence proof is needed. Signatures were valid on 2025-08-06.",
+   "structure": {
+    "rr_count": 19,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 1,
+     "RRSIG": 6,
+     "DNSKEY": 9,
+     "DS": 3
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 19,
+    "chain_valid": true,
+    "valid_from": 1754479363,
+    "expires": 1754842932,
+    "max_cache_ttl": 30,
+    "records": [
+     "BITCOIN:?BC=BC1QYYQ734DCNHHCWYW8YJXSWXG4P7K9NXU0QT84QZ"
+    ]
+   }
+  },
+  {
+   "case": "bip353/03-a-x-domain-cname-wild-valid",
+   "query_name": "a.x_domain_cname_wild.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.",
+   "human_readable_name": "a.x_domain_cname_wild@dnssec_proof_tests.bitcoin.ninja",
+   "source": "bip353-example",
+   "proof_bin": "bip353/03-a-x-domain-cname-wild-valid.bin",
+   "psbt_bin": "bip353/03-a-x-domain-cname-wild-valid.psbt.bin",
+   "proof_bytes": 5747,
+   "psbt_bytes": 5802,
+   "proof_sha256": "ceb7761164149887c06e8f4b6682a5a169e59f0dd42a0edb1d1b8ae3733bfc40",
+   "expected": "valid",
+   "reason": "Valid. Encodes both bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l and a BOLT 12 offer. This is the wildcard-published case: the name is served by a cross-domain wildcard CNAME, so the proof must carry the NSEC3 showing there is no more specific override. Compare byte for byte against case 05, which is this proof with that NSEC3 removed.",
+   "structure": {
+    "rr_count": 35,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "DS": 6,
+     "DNSKEY": 14,
+     "RRSIG": 12,
+     "NSEC3": 1,
+     "CNAME": 1,
+     "TXT": 1
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "ninja.",
+     ".",
+     "com.",
+     "mattcorallo.com.",
+     "bitcoin.ninja."
+    ],
+    "nsec3_params": [
+     {
+      "hash_alg": 1,
+      "flags": 0,
+      "iterations": 0,
+      "salt": "3c92990db9cddbc6"
+     }
+    ],
+    "has_nsec": false,
+    "has_nsec3": true,
+    "has_cname": true,
+    "has_dname": false,
+    "has_wildcard_rrsig": true
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 35,
+    "chain_valid": true,
+    "valid_from": 1754461250,
+    "expires": 1754842932,
+    "max_cache_ttl": 30,
+    "records": [
+     "bitcoin:bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l?lno=lno1zr5qyugqgskrk70kqmuq7v3dnr2fnmhukps9n8hut48vkqpqnskt2svsqwjakp7k6pyhtkuxw7y2kqmsxlwruhzqv0zsnhh9q3t9xhx39suc6qsr07ekm5esdyum0w66mnx8vdquwvp7dp5jp7j3v5cp6aj0w329fnkqqv60q96sz5nkrc5r95qffx002q53tqdk8x9m2tmt85jtpmcycvfnrpx3lr45h2g7na3sec7xguctfzzcm8jjqtj5ya27te60j03vpt0vq9tm2n9yxl2hngfnmygesa25s4u4zlxewqpvp94xt7rur4rhxunwkthk9vly3lm5hh0pqv4aymcqejlgssnlpzwlggykkajp7yjs5jvr2agkyypcdlj280cy46jpynsezrcj2kwa2lyr8xvd6lfkph4xrxtk2xc3lpq"
+    ]
+   }
+  },
+  {
+   "case": "bip353/04-two-bitcoin-txt-INVALID",
+   "query_name": "invalid.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.",
+   "human_readable_name": "invalid@dnssec_proof_tests.bitcoin.ninja",
+   "source": "bip353-example",
+   "proof_bin": "bip353/04-two-bitcoin-txt-INVALID.bin",
+   "psbt_bin": "bip353/04-two-bitcoin-txt-INVALID.psbt.bin",
+   "proof_bytes": 3653,
+   "psbt_bytes": 3694,
+   "proof_sha256": "d8be7333fc8a672c2aedb75a65520cf64ea5aa76efcea2e5b6902422c30572b2",
+   "expected": "invalid",
+   "invalid_at_layer": "bip353",
+   "reason": "INVALID per the BIP. It is a cryptographically VALID DNSSEC proof, so a pure dnssec-prover-style chain validator is expected to ACCEPT it. It must be rejected by BIP 353 layer validation, because it contains two TXT records that both start case-insensitively with 'bitcoin:' and BIP 353 permits exactly one. The live records differ only in case ('BiTcOiN:?BC=' versus 'bitcoin:?bc='), which is the whole point: the check is case-insensitive.",
+   "structure": {
+    "rr_count": 20,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "TXT": 2,
+     "RRSIG": 6,
+     "DNSKEY": 9,
+     "DS": 3
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "ninja.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": false,
+    "has_dname": false,
+    "has_wildcard_rrsig": false
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 20,
+    "chain_valid": true,
+    "valid_from": 1754562829,
+    "expires": 1754842932,
+    "max_cache_ttl": 30,
+    "records": [
+     "BiTcOiN:?BC=bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l",
+     "bitcoin:?bc=bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l"
+    ]
+   }
+  },
+  {
+   "case": "bip353/05-missing-nsec3-wildcard-INVALID",
+   "query_name": "a.x_domain_cname_wild.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.",
+   "human_readable_name": "a.x_domain_cname_wild@dnssec_proof_tests.bitcoin.ninja",
+   "source": "bip353-example",
+   "proof_bin": "bip353/05-missing-nsec3-wildcard-INVALID.bin",
+   "psbt_bin": "bip353/05-missing-nsec3-wildcard-INVALID.psbt.bin",
+   "proof_bytes": 5655,
+   "psbt_bytes": 5710,
+   "proof_sha256": "d85361e9a1d5fa9bb4462fb4887f455c1f00c1449d61401a1b0931993116766a",
+   "expected": "invalid",
+   "invalid_at_layer": "dnssec",
+   "reason": "INVALID per the BIP. Same name and same payload as case 03, but the NSEC3 record required to prove there is no override to the wildcard CNAME entry has been removed. A chain validator must refuse this: without that NSEC3 the resolver could be hiding a more specific record. This is the single most valuable case in the corpus, because the naive way to write a validator is to check every signature present and forget to check that a required denial-of-existence record is present at all.",
+   "structure": {
+    "rr_count": 34,
+    "trailing_bytes": 0,
+    "type_histogram": {
+     "CNAME": 1,
+     "RRSIG": 12,
+     "TXT": 1,
+     "DNSKEY": 14,
+     "DS": 6
+    },
+    "rrsig_algorithms": [
+     "13 (ECDSAP256SHA256)",
+     "8 (RSASHA256)"
+    ],
+    "signers": [
+     "bitcoin.ninja.",
+     "mattcorallo.com.",
+     "ninja.",
+     "com.",
+     "."
+    ],
+    "nsec3_params": [],
+    "has_nsec": false,
+    "has_nsec3": false,
+    "has_cname": true,
+    "has_dname": false,
+    "has_wildcard_rrsig": true
+   },
+   "oracle_chain_result": {
+    "parsed": true,
+    "rr_count": 34,
+    "chain_valid": false,
+    "error": "Invalid"
+   }
+  }
+ ]
+}

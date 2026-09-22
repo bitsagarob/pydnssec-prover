@@ -1,0 +1,40 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e . pytest
+
+      - name: Validator tests
+        run: pytest tests/ -q
+
+      - name: Cache the oracle's cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            difftest/oracle/target
+          key: oracle-${{ hashFiles('difftest/oracle/Cargo.lock') }}
+
+      # Every proof blob must still hash to what INDEX.json recorded, before anything is
+      # measured against it.
+      - name: Corpus integrity
+        run: pytest difftest/ -q -k digest
+
+      - name: Differential tests
+        run: pytest difftest/ -q

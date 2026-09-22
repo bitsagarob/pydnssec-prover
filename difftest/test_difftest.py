@@ -42,7 +42,7 @@ MUTATION_SEED = int(os.environ.get("DIFFTEST_MUTATION_SEED", "20260902"))
 MUTATION_BASES = [
     "bip353/01-simple-valid",
     "bip353/03-a-x-domain-cname-wild-valid",
-    "live/rob.user._bitcoin-payment.silentpayments.net",
+    "live/satoshi.user._bitcoin-payment.twelve.cash",
     "live/a.nsec_tests.dnssec_proof_tests.bitcoin.ninja",
 ]
 
@@ -90,6 +90,16 @@ def test_corpus_is_loaded() -> None:
     )
     assert len(_WITH_PROOF) >= 30, "corpus has suspiciously few replayable proofs"
     assert _NO_PROOF, "corpus should contain negative cases with no proof bytes"
+
+
+@needs_corpus
+@pytest.mark.parametrize("case", _WITH_PROOF, ids=_WITH_PROOF_IDS)
+def test_corpus_blob_matches_its_recorded_digest(case: Case) -> None:
+    """A proof blob that has changed on disk invalidates every result measured from it"""
+    want = case.raw.get("proof_sha256")
+    if not want:
+        pytest.skip("case records no digest")
+    assert case.sha256() == want, "%s has changed on disk" % case.id
 
 
 @needs_corpus

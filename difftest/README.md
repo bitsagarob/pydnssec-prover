@@ -33,8 +33,9 @@ reference side. Nothing else. `run.py` and `pytest` build the reference binary o
 Set `DIFFTEST_OFFLINE=1` to add `--offline` once they are cached, or `DIFFTEST_AUTOBUILD=0` to
 require a hand build.
 
-`pyproject.toml` sets `testpaths = ["tests"]`, so a bare `pytest` will not pick this up. To adopt
-it as CI, add `"difftest"` to `testpaths`.
+`pyproject.toml` sets `testpaths = ["tests"]`, so a bare `pytest` will not pick this up. CI names
+the directory explicitly instead, leaving `pytest` alone for anyone who only wants the validator
+tests.
 
 ### Pinning the port under test
 
@@ -52,23 +53,31 @@ report header states which tree it measured, and says so when the working tree i
 
 ## The corpus
 
-The proofs come from the `dnssec-verify` test corpus: 44 cases, 32 live proofs, 7 live negatives,
-and BIP 353's own 5 example proofs. It is not vendored here, because it belongs to another repo
-along with its regeneration scripts. Point at it with:
+A pinned copy lives in `difftest/corpus` and is used by default, so a clean checkout runs the
+whole suite with no setup. It is 42 cases: 31 live proofs, 6 live negatives, and BIP 353's own 5
+example proofs. `INDEX.json` records the sha256 every blob must have, and
+`test_corpus_blob_matches_its_recorded_digest` checks all 36 before anything is measured against
+them.
+
+To run against a different or freshly captured corpus:
 
 ```
-DIFFTEST_CORPUS=/path/to/dnssec-verify/testdata pytest difftest/
+DIFFTEST_CORPUS=/path/to/corpus pytest difftest/
 ```
 
-or vendor a copy into `difftest/corpus/`. With neither, the suite fails with that message rather
-than skipping quietly; set `DIFFTEST_ALLOW_NO_CORPUS=1` for a skip instead.
+With no corpus at all the suite fails with that message rather than skipping quietly; set
+`DIFFTEST_ALLOW_NO_CORPUS=1` for a skip instead.
 
-The five BIP 353 proofs are also checked into `tests/data/bip353` and run without any of this,
-from `tests/test_bip353.py`.
+The five BIP 353 proofs are also checked into `tests/data/bip353` and run from
+`tests/test_bip353.py`, independently of any of this.
 
-Seven of the 44 cases carry no proof bytes. They are names for which the reference could not
+Six of the 42 cases carry no proof bytes. They are names for which the reference could not
 *build* a proof at all: NXDOMAIN, NODATA, Cloudflare NSEC black lies. There is nothing to replay
 offline, so a bytes-in differential cannot cover them.
+
+The live half was captured from real DNS with a private tool of ours, which is why it is pinned
+here rather than regenerated on demand: re-capturing produces different bytes every time, since
+signature windows move.
 
 ## The clock-pinning rule
 
@@ -93,6 +102,7 @@ thing wrong is the date.
 ## What is in here
 
 ```
+corpus/               the pinned proofs, with INDEX.json recording each blob's sha256
 oracle/               the Rust reference side, links dnssec-prover 0.6.10
   src/main.rs           batch line protocol on stdin, one JSON result per line
 pyside.py             the Python side, same JSON schema, so the two are directly comparable
@@ -121,10 +131,12 @@ bugs, so fixing the port cannot silently blind them.
 Against the validator branch, reference `dnssec-prover` 0.6.10, corpus captured 2026-09-02:
 
 ```
-44 corpus cases: 37 with proof bytes, 7 negatives with nothing to replay
-37 MATCH   0 DIVERGE   7 SKIP
+42 corpus cases: 36 with proof bytes, 6 negatives with nothing to replay
+36 MATCH   0 DIVERGE   6 SKIP
 ```
 
 Mutated-bytes differential, 50 mutants each of four base proofs: 200 of 200 match. Against
-upstream `main` the same run gives 26 match and 11 diverge on the corpus, 69 of 200 mutants
+upstream `main` the same run gives 25 match and 11 diverge on the corpus, 64 of 200 mutants
 diverging, which is what this harness was built to find.
+
+`.github/workflows/ci.yml` runs `tests/`, then the corpus digest check, then `difftest/`.
