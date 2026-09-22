@@ -95,8 +95,7 @@ class VerifiedRRStream:
         """
         name = name_param
 
-        # Bounded, not `while True`: two CNAMEs pointing at each other are a valid-looking proof
-        # and would otherwise spin forever (validation.rs:577).
+        # Bounded: two CNAMEs pointing at each other would otherwise spin forever
         for _ in range(MAX_PROOF_STEPS):
             # Look for CNAME records
             cname_records = [
@@ -109,8 +108,7 @@ class VerifiedRRStream:
                 name = cname_records[0].canonical_name
                 continue
 
-            # Look for DNAME records. The suffix must be strictly shorter and must match on a
-            # label boundary, else a DNAME at the name itself would redirect to itself.
+            # Look for DNAME records, on a label boundary and strictly shorter than the name
             dname_records = [
                 rr for rr in self.verified_rrs
                 if isinstance(rr, DName)
@@ -150,8 +148,7 @@ def resolve_time(time_value: int) -> int:
     cutoff = 60 * 60 * 24 * 365 * 27
     
     if time_value < cutoff:
-        # Assume this is a post-2106 timestamp. The offset is u32::MAX, not 2**32, because that is
-        # what the reference implementation adds and both sides have to agree on the number.
+        # Assume this is a post-2106 timestamp. The offset is u32::MAX, as in the Rust version.
         return time_value + (2**32 - 1)
     else:
         return time_value
@@ -159,10 +156,10 @@ def resolve_time(time_value: int) -> int:
 
 def nsec_ord(a: bytes, b: bytes) -> int:
     """
-    Compare two names in RFC 4034 section 6.1 canonical order (validation.rs:283).
+    Compare two names in RFC 4034 section 6.1 canonical order
 
     Returns a negative number if a < b, zero if equal, a positive number if a > b. Names are
-    compared label by label from the right, and each label byte by byte, ASCII-case-insensitively.
+    compared label by label from the right, each label byte by byte, ASCII-case-insensitively.
     """
     a_labels = a.split(b'.')[::-1]
     b_labels = b.split(b'.')[::-1]
@@ -272,9 +269,8 @@ def verify_rrsig(signature: RRSig, dnskeys: List[DnsKey], records: List[Record])
             record_labels = record.name.labels()
             sig_labels = signature.labels
 
-            # For NSEC types the name should already match the wildcard, so no filtering happens
-            # here. verify_rr_stream relies on that to tell whether an NSEC matched via a wildcard;
-            # rewriting it here would let a resolver change the name out from under us.
+            # NSEC names already match the wildcard and are hashed as they arrived.
+            # verify_rr_stream relies on that to spot an NSEC matched via a wildcard.
             if record.type_code != NSec.TYPE and record_labels != sig_labels:
                 if record_labels < sig_labels:
                     raise ValidationError(ValidationError.ErrorType.INVALID,
@@ -318,8 +314,7 @@ def verify_rrsig(signature: RRSig, dnskeys: List[DnsKey], records: List[Record])
             raise ValidationError(ValidationError.ErrorType.UNSUPPORTED_ALGORITHM,
                                 f"Algorithm {signature.algorithm} not supported")
 
-        # A key tag collision could in principle make this a spurious failure, but it is far more
-        # likely to be a KeyTrap attempt, so hard-fail rather than trying the next key.
+        # Fail immediately rather than trying the next key, to avoid KeyTrap issues
         if not valid:
             raise ValidationError(ValidationError.ErrorType.INVALID, "Signature did not verify")
 
@@ -375,7 +370,7 @@ def verify_rr_set(signatures: List[RRSig], validated_dnskeys: List[DnsKey],
 
 def verify_dnskeys(signatures: List[RRSig], dses: List[DS], records: List[DnsKey]) -> RRSig:
     """
-    Verify a zone's DNSKEY RRset against the DS records delegating to it (validation.rs:157)
+    Verify a zone's DNSKEY RRset against the DS records delegating to it
 
     Args:
         signatures: The RRSigs covering the DNSKEY RRset
@@ -396,16 +391,15 @@ def verify_dnskeys(signatures: List[RRSig], dses: List[DS], records: List[DnsKey
             had_known_digest_type = True
             break
 
-    # "No DS at all" means an unsigned delegation and is a hard failure. "A DS we cannot read" is
-    # only an algorithm gap, which the caller may treat differently.
+    # No DS at all is an unsigned delegation; a DS we cannot read is only an algorithm gap
     if not had_ds:
         raise ValidationError(ValidationError.ErrorType.INVALID, "No DS records for zone")
     if not had_known_digest_type:
         raise ValidationError(ValidationError.ErrorType.UNSUPPORTED_ALGORITHM,
                               "No supported DS digest type")
 
-    # Only trust a SHA-1 DS if the zone published nothing stronger, so an attacker who can forge a
-    # SHA-1 collision cannot downgrade a zone that also published SHA-256 or SHA-384.
+    # Only trust a SHA-1 DS if the zone published nothing stronger, so a forged SHA-1 collision
+    # cannot downgrade a zone
     trust_sha1 = all(ds.digest_type != 2 and ds.digest_type != 4 for ds in dses)
 
     validated_dnskeys: List[DnsKey] = []
@@ -466,9 +460,7 @@ def verify_rr_stream(rr_stream: List[Record]) -> VerifiedRRStream:
     min_ttl = 2 ** 32 - 1
     rrsig_sets_validated = 0
 
-    # Walk the delegation chain zone by zone, starting at the root. A key is only ever used for
-    # the zone it was delegated to, which is what stops a key from any DNSSEC-signed domain from
-    # signing records for somebody else's.
+    # Walk the delegation chain zone by zone from the root, offering each zone only its own keys
     while zone == "." or pending_ds_sets:
         if pending_ds_sets:
             zone, next_ds_set = pending_ds_sets.pop()
@@ -527,8 +519,8 @@ def verify_rr_stream(rr_stream: List[Record]) -> VerifiedRRStream:
                 raise ValidationError(ValidationError.ErrorType.INVALID,
                                       "RRSig covers an RRSig or an out-of-band DnsKey")
             elif rrsig.type_covered == DS.TYPE:
-                # Ignore wildcard DS records: the nearest-neighbour non-existence proof required
-                # after the zone cut could not be included for one.
+                # Ignore wildcard DS records: the non-existence proof required after the zone
+                # cut could not be included for one
                 if rrsig.labels != rrsig.name.labels():
                     continue
                 if not any(pending_zone == rrsig.name.name for pending_zone, _ in pending_ds_sets):
@@ -544,9 +536,9 @@ def verify_rr_stream(rr_stream: List[Record]) -> VerifiedRRStream:
                     if rrsig.labels == 0xff:
                         raise ValidationError(ValidationError.ErrorType.INVALID,
                                               "Wildcard RRSig label count overflows")
-                    # A wildcard expansion needs an NSEC/NSEC3 proof that nothing more specific
-                    # exists, checked at the end. The proof is for the "next closest" name: if
-                    # a.b.c was signed as *.c we want a proof that nothing is in b.c.
+                    # A wildcard expansion needs a proof that nothing more specific exists,
+                    # for the next closest name: if a.b.c was signed as *.c, prove nothing is
+                    # in b.c. Checked once the whole stream is validated.
                     proof_name = rrsig.name.trailing_n_labels(rrsig.labels + 1)
                     if proof_name is None:
                         raise ValidationError(ValidationError.ErrorType.INVALID,
@@ -598,10 +590,9 @@ def _check_non_existence_proofs(rrs_needing_non_existence_proofs: List[Tuple[str
                                 nsec_records: List[Tuple[Record, str]]):
     """
     Check that every wildcard-expanded RRset came with a proof that no more specific name exists
-    (validation.rs:460).
 
-    Without this a resolver can hand us a wildcard answer while hiding the real, more specific
-    record, which for BIP 353 means handing us the wrong bitcoin address.
+    Without this a resolver can serve a wildcard answer while hiding the real, more specific
+    record, which for BIP 353 means handing the caller the wrong bitcoin address.
     """
     # Sort first so that the retains below avoid shifting
     pending = sorted(rrs_needing_non_existence_proofs,
@@ -616,9 +607,8 @@ def _check_non_existence_proofs(rrs_needing_non_existence_proofs: List[Tuple[str
         proven = False
 
         for nsec in [rr for rr in local_zone_nsecs if isinstance(rr, NSec)]:
-            # If the NSEC next_name ends with the name we're looking for, a real subdomain overlaps
-            # the name we were told resolved to a wildcard. That is forbidden: if a.b.c.d.e exists,
-            # *.e cannot be used for any of a.b.c.d.e, *.b.c.d.e, *.c.d.e or *.d.e.
+            # A next_name ending in the name we want means a real subdomain overlaps it, so the
+            # wildcard cannot apply: if a.b.c.d.e exists, *.e covers none of it
             if name_ends_with_labels(nsec.next_name, name):
                 continue
 

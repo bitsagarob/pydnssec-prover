@@ -120,14 +120,14 @@ def read_nsec_types_bitmap(data: bytes, offset: int, length: int) -> Tuple[bytes
     return bytes(types), offset
 
 
-# A compression pointer may only ever be followed this many times. Without a cap the two bytes
-# "\xc0\x00" are a self-reference that never terminates (ser.rs:78).
+# A compression pointer may only be followed this many times. Without a cap the two bytes
+# "\xc0\x00" are a self-reference that never terminates.
 NAME_RECURSION_LIMIT = 255
 
 
 def _do_read_wire_packet_labels(data: bytes, offset: int, wire_packet: bytes,
                                 name: bytearray, recursion_limit: int) -> int:
-    """Port of do_read_wire_packet_labels (ser.rs:55). Returns the offset just past the name."""
+    """Read the labels of a name into `name`, returning the offset just past it"""
     while True:
         if offset >= len(data):
             raise SerializationError("Unexpected end of data while reading name")
@@ -220,10 +220,10 @@ def write_name(out: BytesIO, name: str):
 
 def write_name_without_case_modification(out: BytesIO, name_bytes: bytes):
     """
-    Write a DNS name in wire format from raw bytes, preserving case.
+    Write a DNS name in wire format from raw bytes, preserving case
 
     RFC 6840 section 5.1 forbids lowercasing the NSEC next_name field, and the bytes may not be a
-    valid host name at all (online signers routinely emit a leading NUL label).
+    valid host name at all.
     """
     if name_bytes == b".":
         out.write(b'\x00')

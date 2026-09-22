@@ -22,7 +22,7 @@ except ImportError:
 
 def name_ends_with_labels(name: bytes, suffix: str) -> bool:
     """
-    Check that `suffix` is a suffix of `name` on a label boundary (rr.rs:18).
+    Check that `suffix` is a suffix of `name` on a label boundary
 
     A plain string `endswith` is not enough: "evilmattcorallo.com." ends with "mattcorallo.com."
     as characters but is a different zone.
@@ -41,10 +41,10 @@ def name_ends_with_labels(name: bytes, suffix: str) -> bool:
 
 def _name_cmp(a: str, b: str) -> int:
     """
-    Order two names by their wire encoding (rr.rs Ord for Name).
+    Order two names by their wire encoding
 
-    Each label is compared by length first, then by bytes, which is what makes an RRset of records
-    holding names sort into RFC 4034 canonical order.
+    Each label is compared by length first, then by bytes, which sorts an RRset of records holding
+    names into RFC 4034 canonical order.
     """
     a_labels = a.split('.')
     b_labels = b.split('.')
@@ -446,9 +446,8 @@ class Txt(Record):
     
     @classmethod
     def from_wire_data(cls, name: Name, data: bytes, wire_packet: Optional[bytes] = None) -> 'Txt':
-        # Parse TXT data according to DNS wire format (length-prefixed strings). The chunk
-        # boundaries are kept exactly as they arrived: re-chunking at 255 would change the bytes
-        # that were signed for any record split at some other length.
+        # Parse TXT data according to DNS wire format (length-prefixed strings). Chunk boundaries
+        # are kept as they arrived: re-chunking at 255 changes the bytes that were signed.
         chunks = []
         offset = 0
         serialized_len = 0
@@ -480,8 +479,11 @@ class Txt(Record):
             out.write(chunk)
     
     def __eq__(self, other) -> bool:
-        return isinstance(other, Txt) and self._name == other._name and self.data == other.data
-    
+        # Compare chunks, not the concatenation: two records holding the same text under different
+        # chunk boundaries have different signed RDATA and are different records
+        return (isinstance(other, Txt) and self._name == other._name
+                and self.data_chunks == other.data_chunks)
+
     def __lt__(self, other) -> bool:
         if isinstance(other, Txt):
             # Compare in wire encoding form like the Rust implementation
@@ -900,8 +902,8 @@ class NSec(Record):
     
     def __init__(self, name: Name, next_name: Union[bytes, Name, str], types: NSecTypeMask):
         self._name = name
-        # Held as raw bytes: an online signer's next_name commonly carries a NUL label and its case
-        # is significant, so it cannot go through Name normalisation.
+        # Held as raw bytes: next_name is case-significant and online signers routinely emit a
+        # NUL label, so it cannot go through Name normalisation
         if isinstance(next_name, Name):
             next_name = str(next_name)
         if isinstance(next_name, str):
@@ -1096,8 +1098,7 @@ def parse_rr_stream(data: bytes) -> List[Record]:
     
     while offset < len(data):
         # Parse record header. An RFC 9102 chain is a bare series of records with no enclosing
-        # packet, so compression pointers have nothing legitimate to point at: pass an empty wire
-        # packet and they error out (ser.rs:157).
+        # packet, so an empty wire packet is passed and compression pointers are refused.
         name_str, offset = ser.read_wire_packet_name(data, offset, b"")
         name = Name(name_str)
         
@@ -1122,9 +1123,8 @@ def parse_rr_stream(data: bytes) -> List[Record]:
         record_data = data[offset:offset + rdlength]
         offset += rdlength
         
-        # Parse record based on type. An unsupported type fails the whole stream rather than being
-        # skipped, so this port and the reference implementation never disagree about which proofs
-        # parse at all (ser.rs:151).
+        # Parse record based on type. An unsupported type fails the whole stream rather than
+        # being skipped, matching the Rust version.
         if rr_type not in RECORD_TYPES:
             raise SerializationError(f"Unsupported record type {rr_type}")
 
