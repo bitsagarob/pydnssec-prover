@@ -103,7 +103,10 @@ def read_nsec_types_bitmap(data: bytes, offset: int, length: int) -> Tuple[bytes
         window_block = data[offset]
         bitmap_length = data[offset + 1]
         offset += 2
-        
+
+        if bitmap_length == 0 or bitmap_length > 32:
+            raise SerializationError("Invalid NSEC bitmap window length")
+
         if offset + bitmap_length > end_offset:
             raise SerializationError("NSEC bitmap window extends beyond available data")
         
@@ -117,68 +120,83 @@ def read_nsec_types_bitmap(data: bytes, offset: int, length: int) -> Tuple[bytes
     return bytes(types), offset
 
 
-def read_wire_packet_name(data: bytes, offset: int, wire_packet: Optional[bytes] = None) -> Tuple[str, int]:
-    """
-    Read a DNS name from wire format, handling compression if wire_packet is provided
-    
-    Returns (name_string, new_offset)
-    """
-    if wire_packet is None:
-        wire_packet = data
-    
-    name_parts = []
-    original_offset = offset
-    jumped = False
-    
+# A compression pointer may only be followed this many times. Without a cap the two bytes
+# "\xc0\x00" are a self-reference that never terminates.
+NAME_RECURSION_LIMIT = 255
+
+
+def _do_read_wire_packet_labels(data: bytes, offset: int, wire_packet: bytes,
+                                name: bytearray, recursion_limit: int) -> int:
+    """Read the labels of a name into `name`, returning the offset just past it"""
     while True:
         if offset >= len(data):
             raise SerializationError("Unexpected end of data while reading name")
-        
+
         length = data[offset]
         offset += 1
-        
+
         if length == 0:
-            # End of name
+            if not name:
+                name.extend(b'.')
             break
-        elif length >= 0xc0:
-            # Compression pointer
+        elif length >= 0xc0 and recursion_limit > 0:
             if offset >= len(data):
                 raise SerializationError("Incomplete compression pointer")
-            
             pointer_offset = ((length & 0x3f) << 8) | data[offset]
             offset += 1
-            
-            if not jumped:
-                original_offset = offset
-                jumped = True
-            
             if pointer_offset >= len(wire_packet):
                 raise SerializationError("Compression pointer beyond packet bounds")
-            
-            offset = pointer_offset
-            data = wire_packet
-        else:
-            # Regular label
-            if offset + length > len(data):
-                raise SerializationError("Label extends beyond available data")
-            
-            try:
-                label = data[offset:offset + length].decode('utf-8')
-            except UnicodeDecodeError:
-                raise SerializationError("Invalid UTF-8 in DNS label")
-            
-            name_parts.append(label)
-            offset += length
-    
-    if jumped:
-        offset = original_offset
-    
-    if not name_parts:
-        name = "."
-    else:
-        name = ".".join(name_parts) + "."
-    
-    return name, offset
+            _do_read_wire_packet_labels(wire_packet, pointer_offset, wire_packet, name,
+                                        recursion_limit - 1)
+            break
+
+        # A label must be followed by at least the terminating zero byte, so strictly more than
+        # `length` bytes have to remain.
+        if len(data) - offset <= length:
+            raise SerializationError("Label extends beyond available data")
+        if length > 63:
+            raise SerializationError("DNS label too long")
+
+        name.extend(data[offset:offset + length])
+        name.extend(b'.')
+        offset += length
+
+        if len(name) > 255:
+            raise SerializationError("Name too long")
+
+    return offset
+
+
+def read_wire_packet_name_bytes(data: bytes, offset: int,
+                                wire_packet: Optional[bytes] = None) -> Tuple[bytes, int]:
+    """
+    Read a DNS name from wire format as raw bytes, handling compression against wire_packet.
+
+    Pass an empty wire_packet to reject compression pointers outright.
+
+    Returns (name_bytes, new_offset)
+    """
+    if wire_packet is None:
+        wire_packet = data
+
+    name = bytearray()
+    offset = _do_read_wire_packet_labels(data, offset, wire_packet, name, NAME_RECURSION_LIMIT)
+    if len(name) > 255:
+        raise SerializationError("Name too long")
+    return bytes(name), offset
+
+
+def read_wire_packet_name(data: bytes, offset: int, wire_packet: Optional[bytes] = None) -> Tuple[str, int]:
+    """
+    Read a DNS name from wire format, handling compression if wire_packet is provided
+
+    Returns (name_string, new_offset)
+    """
+    name, offset = read_wire_packet_name_bytes(data, offset, wire_packet)
+    try:
+        return name.decode('utf-8'), offset
+    except UnicodeDecodeError:
+        raise SerializationError("Invalid UTF-8 in DNS label")
 
 
 def write_name(out: BytesIO, name: str):
@@ -198,6 +216,23 @@ def write_name(out: BytesIO, name: str):
             out.write(struct.pack('B', len(label_bytes)))
             out.write(label_bytes)
         out.write(b'\x00')  # End of name
+
+
+def write_name_without_case_modification(out: BytesIO, name_bytes: bytes):
+    """
+    Write a DNS name in wire format from raw bytes, preserving case
+
+    RFC 6840 section 5.1 forbids lowercasing the NSEC next_name field, and the bytes may not be a
+    valid host name at all.
+    """
+    if name_bytes == b".":
+        out.write(b'\x00')
+    else:
+        for label in name_bytes.split(b'.'):
+            if len(label) > 63:
+                raise SerializationError("DNS label too long")
+            out.write(struct.pack('B', len(label)))
+            out.write(label)
 
 
 def name_len(name: str) -> int:

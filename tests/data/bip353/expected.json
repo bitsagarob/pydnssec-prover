@@ -1,0 +1,66 @@
+{
+  "oracle": "dnssec-prover 0.6.10",
+  "source": "BIP 353 appendix examples, replayed through dnssec-prover",
+  "cases": [
+    {
+      "case": "01-simple-valid",
+      "proof": "01-simple-valid.bin",
+      "query_name": "simple.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.",
+      "chain_valid": true,
+      "rr_count": 20,
+      "valid_from": 1754562918,
+      "expires": 1754842932,
+      "max_cache_ttl": 30,
+      "records": [
+        "bitcoin is cool!",
+        "bitcoin:?bc=bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l"
+      ]
+    },
+    {
+      "case": "02-override-x-domain-cname-wild-valid",
+      "proof": "02-override-x-domain-cname-wild-valid.bin",
+      "query_name": "override.x_domain_cname_wild.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.",
+      "chain_valid": true,
+      "rr_count": 19,
+      "valid_from": 1754479363,
+      "expires": 1754842932,
+      "max_cache_ttl": 30,
+      "records": [
+        "BITCOIN:?BC=BC1QYYQ734DCNHHCWYW8YJXSWXG4P7K9NXU0QT84QZ"
+      ]
+    },
+    {
+      "case": "03-a-x-domain-cname-wild-valid",
+      "proof": "03-a-x-domain-cname-wild-valid.bin",
+      "query_name": "a.x_domain_cname_wild.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.",
+      "chain_valid": true,
+      "rr_count": 35,
+      "valid_from": 1754461250,
+      "expires": 1754842932,
+      "max_cache_ttl": 30,
+      "records": [
+        "bitcoin:bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l?lno=lno1zr5qyugqgskrk70kqmuq7v3dnr2fnmhukps9n8hut48vkqpqnskt2svsqwjakp7k6pyhtkuxw7y2kqmsxlwruhzqv0zsnhh9q3t9xhx39suc6qsr07ekm5esdyum0w66mnx8vdquwvp7dp5jp7j3v5cp6aj0w329fnkqqv60q96sz5nkrc5r95qffx002q53tqdk8x9m2tmt85jtpmcycvfnrpx3lr45h2g7na3sec7xguctfzzcm8jjqtj5ya27te60j03vpt0vq9tm2n9yxl2hngfnmygesa25s4u4zlxewqpvp94xt7rur4rhxunwkthk9vly3lm5hh0pqv4aymcqejlgssnlpzwlggykkajp7yjs5jvr2agkyypcdlj280cy46jpynsezrcj2kwa2lyr8xvd6lfkph4xrxtk2xc3lpq"
+      ]
+    },
+    {
+      "case": "04-two-bitcoin-txt-INVALID",
+      "proof": "04-two-bitcoin-txt-INVALID.bin",
+      "query_name": "invalid.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.",
+      "chain_valid": true,
+      "rr_count": 20,
+      "valid_from": 1754562829,
+      "expires": 1754842932,
+      "max_cache_ttl": 30,
+      "records": [
+        "BiTcOiN:?BC=bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l",
+        "bitcoin:?bc=bc1qztwy6xen3zdtt7z0vrgapmjtfz8acjkfp5fp7l"
+      ]
+    },
+    {
+      "case": "05-missing-nsec3-wildcard-INVALID",
+      "proof": "05-missing-nsec3-wildcard-INVALID.bin",
+      "query_name": "a.x_domain_cname_wild.user._bitcoin-payment.dnssec_proof_tests.bitcoin.ninja.",
+      "chain_valid": false
+    }
+  ]
+}

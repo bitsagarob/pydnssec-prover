@@ -5,20 +5,25 @@ This module provides the core validation logic for DNSSEC signatures and proofs,
 implementing the same algorithms as the Rust version.
 """
 
-from typing import List, Dict, Set, Optional, Tuple, Union
+from typing import List, Set, Optional, Tuple, Union
 from dataclasses import dataclass
 from enum import Enum
+from functools import cmp_to_key
 import time
 from io import BytesIO
 
 try:
+    from . import base32
     from .crypto import Hasher, validate_rsa, validate_ecdsa_256r1, validate_ecdsa_384r1
-    from .rr import Name, Record, DnsKey, DS, RRSig, CName, DName
+    from .rr import (Name, Record, DnsKey, DS, RRSig, CName, DName, NSec, NSec3,
+                     name_ends_with_labels)
     from .ser import write_name
 except ImportError:
     # Handle direct script execution
+    import base32
     from crypto import Hasher, validate_rsa, validate_ecdsa_256r1, validate_ecdsa_384r1
-    from rr import Name, Record, DnsKey, DS, RRSig, CName, DName
+    from rr import (Name, Record, DnsKey, DS, RRSig, CName, DName, NSec, NSec3,
+                    name_ends_with_labels)
     from ser import write_name
 
 # Maximum number of proof steps to prevent infinite loops
@@ -89,42 +94,46 @@ class VerifiedRRStream:
             List of records that match the resolved name
         """
         name = name_param
-        dname_name = None
-        
-        while True:
+
+        # Bounded: two CNAMEs pointing at each other would otherwise spin forever
+        for _ in range(MAX_PROOF_STEPS):
             # Look for CNAME records
             cname_records = [
-                rr for rr in self.verified_rrs 
+                rr for rr in self.verified_rrs
                 if isinstance(rr, CName) and rr.name == name
             ]
-            
+
             if cname_records:
                 # Follow the CNAME
                 name = cname_records[0].canonical_name
                 continue
-            
-            # Look for DNAME records
+
+            # Look for DNAME records, on a label boundary and strictly shorter than the name
             dname_records = [
-                rr for rr in self.verified_rrs 
-                if isinstance(rr, DName) and name.name.endswith(rr.name.name)
+                rr for rr in self.verified_rrs
+                if isinstance(rr, DName)
+                and len(name.name) > len(rr.name.name)
+                and name.ends_with_labels(rr.name.name)
             ]
-            
+
             if dname_records:
                 dname = dname_records[0]
-                # Strip the suffix and replace with delegation name
-                if name.name.endswith(dname.name.name):
-                    prefix = name.name[:-len(dname.name.name)]
+                prefix = name.name[:-len(dname.name.name)]
+                if dname.delegation_name.name == ".":
+                    resolved_name_str = prefix
+                else:
                     resolved_name_str = prefix + dname.delegation_name.name
-                    try:
-                        dname_name = Name(resolved_name_str)
-                        name = dname_name
-                        continue
-                    except ValueError:
-                        # Combined name too long
-                        return []
-            
+                try:
+                    name = Name(resolved_name_str)
+                except ValueError:
+                    # Combined name too long
+                    return []
+                continue
+
             # No more redirections, return matching records
             return [rr for rr in self.verified_rrs if rr.name == name]
+
+        return []
 
 
 def resolve_time(time_value: int) -> int:
@@ -139,26 +148,57 @@ def resolve_time(time_value: int) -> int:
     cutoff = 60 * 60 * 24 * 365 * 27
     
     if time_value < cutoff:
-        # Assume this is a post-2106 timestamp
-        return time_value + (2**32)
+        # Assume this is a post-2106 timestamp. The offset is u32::MAX, as in the Rust version.
+        return time_value + (2**32 - 1)
     else:
         return time_value
+
+
+def nsec_ord(a: bytes, b: bytes) -> int:
+    """
+    Compare two names in RFC 4034 section 6.1 canonical order
+
+    Returns a negative number if a < b, zero if equal, a positive number if a > b. Names are
+    compared label by label from the right, each label byte by byte, ASCII-case-insensitively.
+    """
+    a_labels = a.split(b'.')[::-1]
+    b_labels = b.split(b'.')[::-1]
+
+    for i in range(max(len(a_labels), len(b_labels))):
+        if i >= len(b_labels):
+            return 1
+        if i >= len(a_labels):
+            return -1
+
+        a_label = a_labels[i].lower()
+        b_label = b_labels[i].lower()
+
+        for j in range(max(len(a_label), len(b_label))):
+            if j >= len(b_label):
+                return 1
+            if j >= len(a_label):
+                return -1
+            if a_label[j] != b_label[j]:
+                return -1 if a_label[j] < b_label[j] else 1
+
+    return 0
 
 
 def verify_rrsig(signature: RRSig, dnskeys: List[DnsKey], records: List[Record]) -> bool:
     """
     Verify an RRSig signature against a set of DNSKEYs and the records it should cover
-    
+
     Args:
         signature: The RRSig to verify
         dnskeys: List of potential signing keys
         records: List of records that should be covered by this signature
-        
+
     Returns:
-        True if the signature is valid, False otherwise
-        
+        True if the signature is valid
+
     Raises:
-        ValidationError: If validation fails due to unsupported algorithms or other issues
+        ValidationError: INVALID if no key matched or the signature did not verify,
+            UNSUPPORTED_ALGORITHM if we cannot check this algorithm at all
     """
     # Verify that all records match the signature's type
     for record in records:
@@ -178,7 +218,11 @@ def verify_rrsig(signature: RRSig, dnskeys: List[DnsKey], records: List[Record])
         # The ZONE flag must be set for validation
         if (dnskey.flags & 0b100000000) == 0:
             continue
-        
+
+        # The REVOKE flag must not be set
+        if (dnskey.flags & 0b010000000) != 0:
+            continue
+
         # Algorithm must match
         if dnskey.algorithm != signature.algorithm:
             continue
@@ -224,20 +268,26 @@ def verify_rrsig(signature: RRSig, dnskeys: List[DnsKey], records: List[Record])
         for record in unique_records:
             record_labels = record.name.labels()
             sig_labels = signature.labels
-            
-            # Handle wildcards
-            if record_labels > sig_labels:
-                # This is a wildcard expansion
-                wildcard_name = "*." + (record.name.trailing_n_labels(sig_labels - 1) or "")
-                name_to_hash = Name(wildcard_name)
+
+            # NSEC names already match the wildcard and are hashed as they arrived.
+            # verify_rr_stream relies on that to spot an NSEC matched via a wildcard.
+            if record.type_code != NSec.TYPE and record_labels != sig_labels:
+                if record_labels < sig_labels:
+                    raise ValidationError(ValidationError.ErrorType.INVALID,
+                                          "Record has fewer labels than its signature claims")
+                signed_name = record.name.trailing_n_labels(sig_labels)
+                if signed_name is None:
+                    raise ValidationError(ValidationError.ErrorType.INVALID,
+                                          "Cannot take the signed name of this record")
+                hasher.update(b"\x01*")
+                name_buf = BytesIO()
+                write_name(name_buf, signed_name)
+                hasher.update(name_buf.getvalue())
             else:
-                name_to_hash = record.name
-            
-            # Add the canonical name
-            name_buf = BytesIO()
-            write_name(name_buf, str(name_to_hash))
-            hasher.update(name_buf.getvalue())
-            
+                name_buf = BytesIO()
+                write_name(name_buf, str(record.name))
+                hasher.update(name_buf.getvalue())
+
             # Add type, class, TTL, and data
             hasher.update(record.type_code.to_bytes(2, 'big'))
             hasher.update((1).to_bytes(2, 'big'))  # Internet class
@@ -255,17 +305,23 @@ def verify_rrsig(signature: RRSig, dnskeys: List[DnsKey], records: List[Record])
         
         # Verify the signature based on algorithm
         if signature.algorithm in [8, 10]:  # RSA algorithms
-            return validate_rsa(dnskey.public_key, signature.signature, hash_result.as_ref())
+            valid = validate_rsa(dnskey.public_key, signature.signature, hash_result.as_ref())
         elif signature.algorithm == 13:  # ECDSA P-256
-            return validate_ecdsa_256r1(dnskey.public_key, signature.signature, hash_result.as_ref())
+            valid = validate_ecdsa_256r1(dnskey.public_key, signature.signature, hash_result.as_ref())
         elif signature.algorithm == 14:  # ECDSA P-384
-            return validate_ecdsa_384r1(dnskey.public_key, signature.signature, hash_result.as_ref())
+            valid = validate_ecdsa_384r1(dnskey.public_key, signature.signature, hash_result.as_ref())
         else:
             raise ValidationError(ValidationError.ErrorType.UNSUPPORTED_ALGORITHM,
                                 f"Algorithm {signature.algorithm} not supported")
-    
+
+        # Fail immediately rather than trying the next key, to avoid KeyTrap issues
+        if not valid:
+            raise ValidationError(ValidationError.ErrorType.INVALID, "Signature did not verify")
+
+        return True
+
     # No matching key found
-    return False
+    raise ValidationError(ValidationError.ErrorType.INVALID, "No matching DNSKEY")
 
 
 def verify_rr_set(signatures: List[RRSig], validated_dnskeys: List[DnsKey], 
@@ -312,6 +368,72 @@ def verify_rr_set(signatures: List[RRSig], validated_dnskeys: List[DnsKey],
         raise ValidationError(ValidationError.ErrorType.INVALID, "No valid signature found")
 
 
+def verify_dnskeys(signatures: List[RRSig], dses: List[DS], records: List[DnsKey]) -> RRSig:
+    """
+    Verify a zone's DNSKEY RRset against the DS records delegating to it
+
+    Args:
+        signatures: The RRSigs covering the DNSKEY RRset
+        dses: The DS records which delegate to this zone, already trusted
+        records: The DNSKEY RRset itself
+
+    Returns:
+        The RRSig which validated the DNSKEY RRset
+
+    Raises:
+        ValidationError
+    """
+    had_ds = False
+    had_known_digest_type = False
+    for ds in dses:
+        had_ds = True
+        if ds.digest_type in (1, 2, 4):
+            had_known_digest_type = True
+            break
+
+    # No DS at all is an unsigned delegation; a DS we cannot read is only an algorithm gap
+    if not had_ds:
+        raise ValidationError(ValidationError.ErrorType.INVALID, "No DS records for zone")
+    if not had_known_digest_type:
+        raise ValidationError(ValidationError.ErrorType.UNSUPPORTED_ALGORITHM,
+                              "No supported DS digest type")
+
+    # Only trust a SHA-1 DS if the zone published nothing stronger, so a forged SHA-1 collision
+    # cannot downgrade a zone
+    trust_sha1 = all(ds.digest_type != 2 and ds.digest_type != 4 for ds in dses)
+
+    validated_dnskeys: List[DnsKey] = []
+    for dnskey in records:
+        for ds in dses:
+            if ds.algorithm != dnskey.algorithm:
+                continue
+            if dnskey.key_tag() != ds.key_tag:
+                continue
+
+            if ds.digest_type == 1 and trust_sha1:
+                hasher = Hasher.sha1()
+            elif ds.digest_type == 2:
+                hasher = Hasher.sha256()
+            elif ds.digest_type == 4:
+                hasher = Hasher.sha384()
+            else:
+                continue
+
+            name_buf = BytesIO()
+            write_name(name_buf, str(dnskey.name))
+            hasher.update(name_buf.getvalue())
+
+            key_data_buf = BytesIO()
+            dnskey.write_data(key_data_buf)
+            hasher.update(key_data_buf.getvalue())
+
+            if hasher.finish().as_ref() == ds.digest:
+                validated_dnskeys.append(dnskey)
+                break
+
+    return verify_rr_set(signatures, validated_dnskeys, records)
+
+
 def verify_rr_stream(rr_stream: List[Record]) -> VerifiedRRStream:
     """
     Verify a stream of DNS records using DNSSEC
@@ -328,138 +450,243 @@ def verify_rr_stream(rr_stream: List[Record]) -> VerifiedRRStream:
     Raises:
         ValidationError: If validation fails
     """
-    # Separate records by type
-    dnskeys: List[DnsKey] = []
-    ds_records: List[DS] = []
-    rrsigs: List[RRSig] = []
-    other_records: List[Record] = []
-    
-    for record in rr_stream:
-        if isinstance(record, DnsKey):
-            dnskeys.append(record)
-        elif isinstance(record, DS):
-            ds_records.append(record)
-        elif isinstance(record, RRSig):
-            rrsigs.append(record)
-        else:
-            other_records.append(record)
-    
-    # Start with root trust anchors
-    trusted_ds_records = root_hints()
-    validated_records: List[Record] = []
-    
-    # Track timing information
-    earliest_expiration = float('inf')
+    zone = "."
+    res: List[Record] = []
+    rrs_needing_non_existence_proofs: List[Tuple[str, str]] = []
+    nsec_records: List[Tuple[Record, str]] = []
+    pending_ds_sets: List[Tuple[str, List[DS]]] = []
     latest_inception = 0
-    min_original_ttl = float('inf')
-    
-    validation_steps = 0
-    
-    # Validate chain of trust
-    while validation_steps < MAX_PROOF_STEPS:
-        validation_steps += 1
-        
-        made_progress = False
-        
-        # Try to validate DNSKEYs using DS records
-        for ds in trusted_ds_records:
-            # Find DNSKEYs for this zone
-            zone_dnskeys = [k for k in dnskeys if k.name == ds.name]
-            if not zone_dnskeys:
-                continue
-            
-            # Find matching DNSKEY for this DS
-            for dnskey in zone_dnskeys:
-                if (dnskey.key_tag() == ds.key_tag and 
-                    dnskey.algorithm == ds.algorithm):
-                    
-                    # Verify the DS digest
-                    if ds.digest_type == 2:  # SHA-256
-                        hasher = Hasher.sha256()
-                    elif ds.digest_type == 1:  # SHA-1
-                        hasher = Hasher.sha1()
-                    else:
-                        continue  # Unsupported digest type
-                    
-                    # Hash the DNSKEY
-                    name_buf = BytesIO()
-                    write_name(name_buf, str(dnskey.name))
-                    hasher.update(name_buf.getvalue())
-                    
-                    key_data_buf = BytesIO()
-                    dnskey.write_data(key_data_buf)
-                    hasher.update(key_data_buf.getvalue())
-                    
-                    computed_digest = hasher.finish()
-                    
-                    if computed_digest.as_ref() == ds.digest:
-                        # This DNSKEY is validated by the DS
-                        if dnskey not in validated_records:
-                            validated_records.append(dnskey)
-                            made_progress = True
-        
-        # Try to validate other records using validated DNSKEYs
-        validated_dnskeys = [r for r in validated_records if isinstance(r, DnsKey)]
-        
-        # Group RRSigs by what they sign
-        rrsig_groups: Dict[Tuple[str, int], List[RRSig]] = {}
-        for rrsig in rrsigs:
-            key = (str(rrsig.name), rrsig.type_covered)
-            if key not in rrsig_groups:
-                rrsig_groups[key] = []
-            rrsig_groups[key].append(rrsig)
-        
-        # Try to validate record sets
-        for (name_str, record_type), signatures in rrsig_groups.items():
-            name = Name(name_str)
-            
-            # Find records of this type at this name
-            matching_records = [r for r in other_records + dnskeys + ds_records 
-                              if r.name == name and r.type_code == record_type]
-            
-            if not matching_records:
-                continue
-            
-            # Skip if already validated
-            if all(r in validated_records for r in matching_records):
-                continue
-            
+    earliest_expiry = 2 ** 64 - 1
+    min_ttl = 2 ** 32 - 1
+    rrsig_sets_validated = 0
+
+    # Walk the delegation chain zone by zone from the root, offering each zone only its own keys
+    while zone == "." or pending_ds_sets:
+        if pending_ds_sets:
+            zone, next_ds_set = pending_ds_sets.pop()
+        else:
+            next_ds_set = None
+
+        rrsig_sets_validated += 1
+        if rrsig_sets_validated > MAX_PROOF_STEPS:
+            raise ValidationError(ValidationError.ErrorType.VALIDATION_COUNT_LIMITED)
+
+        dnskey_rrsigs = [rr for rr in rr_stream
+                         if isinstance(rr, RRSig) and rr.name.name == zone
+                         and rr.type_covered == DnsKey.TYPE]
+        dnskeys = [rr for rr in rr_stream if isinstance(rr, DnsKey) and rr.name.name == zone]
+
+        if zone == ".":
+            verified_dnskey_rrsig = verify_dnskeys(dnskey_rrsigs, root_hints(), dnskeys)
+        else:
+            if next_ds_set is None:
+                break
+            verified_dnskey_rrsig = verify_dnskeys(dnskey_rrsigs, next_ds_set, dnskeys)
+
+        latest_inception = max(latest_inception, resolve_time(verified_dnskey_rrsig.inception))
+        earliest_expiry = min(earliest_expiry, resolve_time(verified_dnskey_rrsig.expiration))
+        min_ttl = min(min_ttl, verified_dnskey_rrsig.original_ttl)
+
+        for rrsig in [rr for rr in rr_stream
+                      if isinstance(rr, RRSig) and rr.signer_name.name == zone
+                      and rr.type_covered != DnsKey.TYPE]:
+            rrsig_sets_validated += 1
+            if rrsig_sets_validated > MAX_PROOF_STEPS:
+                raise ValidationError(ValidationError.ErrorType.VALIDATION_COUNT_LIMITED)
+
+            # The zone binding: this zone's keys may only sign names inside this zone.
+            if not rrsig.name.ends_with_labels(zone):
+                raise ValidationError(ValidationError.ErrorType.INVALID,
+                                      "RRSig signs a name outside its signer's zone")
+
+            signed_records = [rr for rr in rr_stream
+                              if rr.name == rrsig.name and rr.type_code == rrsig.type_covered]
+
             try:
-                valid_rrsig = verify_rr_set(signatures, validated_dnskeys, matching_records)
-                
-                # Add these records as validated
-                for record in matching_records:
-                    if record not in validated_records:
-                        validated_records.append(record)
-                        made_progress = True
-                
-                # Update timing information
-                earliest_expiration = min(earliest_expiration, resolve_time(valid_rrsig.expiration))
-                latest_inception = max(latest_inception, resolve_time(valid_rrsig.inception))
-                min_original_ttl = min(min_original_ttl, valid_rrsig.original_ttl)
-                
-                # If we validated DS records, add them to trusted set
-                for record in matching_records:
-                    if isinstance(record, DS) and record not in trusted_ds_records:
-                        trusted_ds_records.append(record)
-                        
-            except ValidationError:
-                # This record set couldn't be validated, continue with others
-                continue
-        
-        if not made_progress:
-            break
-    
-    # Filter out DNSSEC infrastructure records from the final result
-    final_records = [r for r in validated_records 
-                    if not isinstance(r, (DnsKey, DS, RRSig))]
-    
+                verify_rrsig(rrsig, dnskeys, signed_records)
+            except ValidationError as e:
+                if e.error_type == ValidationError.ErrorType.UNSUPPORTED_ALGORITHM:
+                    continue
+                # An invalid signature fails the whole proof, avoiding KeyTrap issues.
+                raise
+
+            latest_inception = max(latest_inception, resolve_time(rrsig.inception))
+            earliest_expiry = min(earliest_expiry, resolve_time(rrsig.expiration))
+            min_ttl = min(min_ttl, rrsig.original_ttl)
+
+            if rrsig.type_covered in (RRSig.TYPE, DnsKey.TYPE):
+                # RRSigs shouldn't cover child DnsKeys or other RRSigs
+                raise ValidationError(ValidationError.ErrorType.INVALID,
+                                      "RRSig covers an RRSig or an out-of-band DnsKey")
+            elif rrsig.type_covered == DS.TYPE:
+                # Ignore wildcard DS records: the non-existence proof required after the zone
+                # cut could not be included for one
+                if rrsig.labels != rrsig.name.labels():
+                    continue
+                if not any(pending_zone == rrsig.name.name for pending_zone, _ in pending_ds_sets):
+                    pending_ds_sets.append((rrsig.name.name,
+                                            [rr for rr in signed_records if isinstance(rr, DS)]))
+            else:
+                if rrsig.labels != rrsig.name.labels() and rrsig.type_covered != NSec.TYPE:
+                    if rrsig.type_covered == NSec3.TYPE:
+                        # NSEC3 records should never appear on wildcards, so treat the whole proof
+                        # as invalid
+                        raise ValidationError(ValidationError.ErrorType.INVALID,
+                                              "NSEC3 record signed via a wildcard")
+                    if rrsig.labels == 0xff:
+                        raise ValidationError(ValidationError.ErrorType.INVALID,
+                                              "Wildcard RRSig label count overflows")
+                    # A wildcard expansion needs a proof that nothing more specific exists,
+                    # for the next closest name: if a.b.c was signed as *.c, prove nothing is
+                    # in b.c. Checked once the whole stream is validated.
+                    proof_name = rrsig.name.trailing_n_labels(rrsig.labels + 1)
+                    if proof_name is None:
+                        raise ValidationError(ValidationError.ErrorType.INVALID,
+                                              "Cannot derive the next closest name")
+                    rrs_needing_non_existence_proofs.append((proof_name, rrsig.signer_name.name))
+
+                for record in signed_records:
+                    if record not in res:
+                        if record.type_code in (NSec.TYPE, NSec3.TYPE):
+                            nsec_records.append((record, rrsig.signer_name.name))
+                        res.append(record)
+
+    if not res:
+        raise ValidationError(ValidationError.ErrorType.INVALID, "No records were verified")
+    if latest_inception >= earliest_expiry:
+        raise ValidationError(ValidationError.ErrorType.INVALID, "Empty validity window")
+
+    _check_non_existence_proofs(rrs_needing_non_existence_proofs, nsec_records)
+
+    # NSEC and NSEC3 records are proof machinery, never an answer
+    final_records = [rr for rr in res if rr.type_code not in (NSec.TYPE, NSec3.TYPE)]
+
     return VerifiedRRStream(
         verified_rrs=final_records,
         valid_from=latest_inception,
-        expires=int(earliest_expiration) if earliest_expiration != float('inf') else 0,
-        max_cache_ttl=int(min_original_ttl) if min_original_ttl != float('inf') else 0
-    ) 
+        expires=earliest_expiry,
+        max_cache_ttl=min_ttl
+    )
+
+
+def _nsec3_name_hash(name: str, salt: bytes, iterations: int) -> bytes:
+    """Compute the NSEC3 hash of a name: SHA-1 over the wire name plus salt, iterated"""
+    hasher = Hasher.sha1()
+    name_buf = BytesIO()
+    write_name(name_buf, name)
+    hasher.update(name_buf.getvalue())
+    hasher.update(salt)
+
+    for _ in range(iterations):
+        digest = hasher.finish().as_ref()
+        hasher = Hasher.sha1()
+        hasher.update(digest)
+        hasher.update(salt)
+
+    return hasher.finish().as_ref()
+
+
+def _check_non_existence_proofs(rrs_needing_non_existence_proofs: List[Tuple[str, str]],
+                                nsec_records: List[Tuple[Record, str]]):
+    """
+    Check that every wildcard-expanded RRset came with a proof that no more specific name exists
+
+    Without this a resolver can serve a wildcard answer while hiding the real, more specific
+    record, which for BIP 353 means handing the caller the wrong bitcoin address.
+    """
+    # Sort first so that the retains below avoid shifting
+    pending = sorted(rrs_needing_non_existence_proofs,
+                     key=cmp_to_key(lambda a, b: nsec_ord(a[0].encode('utf-8'),
+                                                          b[0].encode('utf-8'))))
+
+    while pending:
+        name, zone = pending.pop()
+        name_bytes = name.encode('utf-8')
+
+        local_zone_nsecs = [rr for rr, nsec_zone in nsec_records if nsec_zone == zone]
+        proven = False
+
+        for nsec in [rr for rr in local_zone_nsecs if isinstance(rr, NSec)]:
+            # A next_name ending in the name we want means a real subdomain overlaps it, so the
+            # wildcard cannot apply: if a.b.c.d.e exists, *.e covers none of it
+            if name_ends_with_labels(nsec.next_name, name):
+                continue
+
+            # The last NSEC in a zone's chain wraps around
+            after_start = nsec_ord(nsec.name.name.encode('utf-8'), name_bytes) < 0
+            before_end = nsec_ord(nsec.next_name, name_bytes) > 0
+            if nsec_ord(nsec.name.name.encode('utf-8'), nsec.next_name) < 0:
+                name_contained = after_start and before_end
+            else:
+                name_contained = after_start or before_end
+
+            if name_contained:
+                proven = True
+                break
+
+        if not proven:
+            nsec3_search = [rr for rr in local_zone_nsecs if isinstance(rr, NSec3)]
+
+            # Only ever two entries, so a list beats a map here
+            nsec3params_to_name_hash: List[Tuple[int, bytes, bytes]] = []
+            for nsec3 in nsec3_search:
+                if nsec3.hash_iterations > 2500:
+                    # RFC 5155 sets different limits based on key length; 2500 for all key types
+                    continue
+                if nsec3.hash_algorithm != 1:
+                    continue
+                if any(iterations == nsec3.hash_iterations and salt == nsec3.salt
+                       for iterations, salt, _ in nsec3params_to_name_hash):
+                    continue
+
+                nsec3params_to_name_hash.append((
+                    nsec3.hash_iterations, nsec3.salt,
+                    _nsec3_name_hash(name, nsec3.salt, nsec3.hash_iterations)))
+
+                if len(nsec3params_to_name_hash) >= 2:
+                    # More than two iteration/salt sets per zone is assumed to be a DoS attempt
+                    break
+
+            for nsec3 in nsec3_search:
+                if nsec3.flags != 0:
+                    # Opt-out NSEC3 (or unknown flags), so it proves nothing about non-existence
+                    continue
+                if nsec3.hash_algorithm != 1:
+                    continue
+
+                name_hash = None
+                for iterations, salt, candidate in nsec3params_to_name_hash:
+                    if iterations == nsec3.hash_iterations and salt == nsec3.salt:
+                        name_hash = candidate
+                        break
+                if name_hash is None:
+                    continue
+
+                start_hash_base32 = nsec3.name.name.split('.', 1)[0]
+                try:
+                    start_hash = base32.decode(start_hash_base32)
+                except ValueError:
+                    continue
+                if len(start_hash) != 20 or len(nsec3.next_name_hash) != 20:
+                    continue
+
+                # The last NSEC3 in a zone's chain wraps around
+                after_start = start_hash < name_hash
+                before_end = nsec3.next_name_hash > name_hash
+                if start_hash < nsec3.next_name_hash:
+                    hash_contained = after_start and before_end
+                else:
+                    hash_contained = after_start or before_end
+
+                if hash_contained:
+                    proven = True
+                    break
+
+        if not proven:
+            raise ValidationError(ValidationError.ErrorType.INVALID,
+                                  "Missing non-existence proof for a wildcard expansion")
+
+        pending = [(n, z) for n, z in pending if n != name or z != zone]
 
 
 def verify_byte_stream(stream: bytes, name_to_resolve: str) -> str:
